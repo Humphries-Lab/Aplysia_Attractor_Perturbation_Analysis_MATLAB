@@ -10,17 +10,27 @@
 cfg = struct();
 
 % ---- Paths --------------------------------------------------------------
-cfg.DATA_FILE   = fullfile(toolboxRoot, 'YourDataFile.mat');
+% cfg.DATA_FILE_INPUT accepts either:
+%   - a bare filename, e.g. 'Sep1225.mat'  -> resolved relative to toolboxRoot
+%   - a full path anywhere on disk, e.g. 'D:\Data\Sep1225.mat', or
+%     '/home/user/data/Sep1225.mat' -> used as-is
+cfg.DATA_FILE_INPUT = 'YourDataFile.mat';   % <-- EDIT THIS
+[pathPart, ~, ~] = fileparts(cfg.DATA_FILE_INPUT);
+if isempty(pathPart)
+    cfg.DATA_FILE = fullfile(toolboxRoot, cfg.DATA_FILE_INPUT);
+else
+    cfg.DATA_FILE = cfg.DATA_FILE_INPUT;
+end
+
 cfg.RESULTS_DIR = fullfile(toolboxRoot, 'Results');
 cfg.FIGURES_DIR = fullfile(toolboxRoot, 'Figures');
-
 % ---- Recording metadata --------------------------------------------------
 cfg.recording_ID = 'RecID';   % like Jan01/Feb25 etc. 
 cfg.protocol     = '12min';   % '12min' or '20min'
 cfg.fs           = 1629;      % sampling rate (fps)
 
 % ---- Data loading ---------------------------------------------------------
-cfg.chunk_size = 50;          % neurons loaded per chunk (memory control)
+cfg.chunk_size = 50;          % neurons loaded per chunk to save memory
 
 % ---- Neuron quality filter ------------------------------------------------
 cfg.min_rate = 0.01;          % Hz, minimum mean event rate to keep a neuron
