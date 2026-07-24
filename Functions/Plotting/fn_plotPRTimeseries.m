@@ -16,6 +16,5 @@ xlabel('Time (s)'); ylabel(sprintf('PR/N  (window=%ds)',slide_win_s)); grid on;
 title(sprintf('Normalised dimensionality over time | %s  [window=%ds, step=%ds]', ...
               recording_ID, slide_win_s, slide_step_s));
 exportgraphics(fig, fullfile(figuresDir,'03_PR_timeseries.png'), 'Resolution', 500);
-close(fig);
 
 end
