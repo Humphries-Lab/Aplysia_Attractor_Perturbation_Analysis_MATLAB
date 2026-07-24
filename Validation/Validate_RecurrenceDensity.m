@@ -263,7 +263,6 @@ fn_letterAxes([axA axB axC axD axE axF axG], LETTER_SZ, FONT);
 fn_formatAxes(fig1, FONT, FONT_SZ);
 drawnow;
 exportgraphics(fig1, fullfile(cfg.FIGURES_DIR, 'validation_recurrence_case1_changing_dynamics.png'), 'Resolution', DPI);
-close(fig1);
 
 % --- FIGURE 2: Case 2 (stationary control) ---
 FIG2_W = 1600; FIG2_H = 720;
@@ -317,7 +316,6 @@ legend(axH, 'off');
 fn_letterAxes([axH axI axJ axK axL axM], LETTER_SZ, FONT);
 drawnow;
 exportgraphics(fig2, fullfile(cfg.FIGURES_DIR, 'validation_recurrence_case2_stationary_control.png'), 'Resolution', DPI);
-close(fig2);
 
 fprintf('\n=== Synthetic Validation (Recurrence Density) complete. Figures saved:\n');
 fprintf('    validation_recurrence_case1_changing_dynamics.png\n');
