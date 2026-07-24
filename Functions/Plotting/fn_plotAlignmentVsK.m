@@ -12,6 +12,5 @@ xlabel('K'); ylabel('Alignment');
 legend('Observed','Chance K/N','Location','southeast');
 title(sprintf('Alignment sensitivity to K | %s', recording_ID)); grid on;
 exportgraphics(fig, fullfile(figuresDir,'04b_alignment_vs_K.png'), 'Resolution', 500);
-close(fig);
 
 end
