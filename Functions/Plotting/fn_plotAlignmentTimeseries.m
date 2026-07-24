@@ -18,6 +18,5 @@ ylim([0 1]); xlabel('Time (s)');
 ylabel('Alignment with evoked subspace'); grid on;
 title(sprintf('Alignment over time | %s  [K=%d, win=%ds]', recording_ID, nDims, slide_win_s));
 exportgraphics(fig, fullfile(figuresDir,'04c_alignment_timeseries.png'), 'Resolution', 500);
-close(fig);
 
 end
