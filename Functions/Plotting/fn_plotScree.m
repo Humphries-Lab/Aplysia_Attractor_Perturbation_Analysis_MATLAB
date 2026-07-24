@@ -11,6 +11,5 @@ plot(1:nShow, cumsum(var_exp(1:nShow)), 'ro-', 'MarkerFaceColor','r');
 xlabel('PC'); ylabel('Variance (%)');
 legend('Individual','Cumulative'); title('Scree plot'); grid on;
 exportgraphics(fig, fullfile(figuresDir,'02_scree.png'), 'Resolution', 500);
-close(fig);
 
 end
