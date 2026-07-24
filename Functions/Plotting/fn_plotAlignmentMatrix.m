@@ -16,6 +16,5 @@ for i=1:nW
 end
 title(sprintf('Subspace alignment | %s', recording_ID));
 exportgraphics(fig, fullfile(figuresDir,'04a_alignment_matrix.png'), 'Resolution', 500);
-close(fig);
 
 end
