@@ -12,6 +12,5 @@ hold on;
 xline(t_P9,'w-','LineWidth',2,'Label','P9');
 xline(t_C2,'c-','LineWidth',2,'Label','C2');
 exportgraphics(fig, fullfile(figuresDir,'01c_smoothed.png'), 'Resolution', 500);
-close(fig);
 
 end
