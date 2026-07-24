@@ -39,6 +39,5 @@ grid on; box on; set(gca, 'FontSize', 11, 'TickDir', 'out');
 hold off;
 
 exportgraphics(fig, fullfile(figuresDir, '05e_fft_recurrence_period.png'), 'Resolution', 500);
-close(fig);
 
 end
