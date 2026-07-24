@@ -33,6 +33,5 @@ xlabel('Time (s)'); ylabel('Recurrence density');
 title(sprintf('%s | Attractor epoch detection', recording_ID), 'FontWeight', 'normal');
 legend('Location','northeastoutside'); grid off; box on;
 exportgraphics(fig, fullfile(figuresDir, '05c_epoch_detection.png'), 'Resolution', 550);
-close(fig);
 
 end
