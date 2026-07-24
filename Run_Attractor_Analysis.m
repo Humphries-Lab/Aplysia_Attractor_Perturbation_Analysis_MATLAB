@@ -253,16 +253,7 @@ fprintf('  Alignment E->R [RR-defined]: %.3f  |  [fixed]: %.3f  |  Chance: %.3f\
 fn_plotAttractorComparison(PR_norm, PR_norm_rr, win_labels, ...
     align_mat(2,3), align_mat_rr(2,3), chance_lvl, ...
     ev_recur_density, re_recur_density, cross_recur_density, cfg.recording_ID, cfg.FIGURES_DIR);
-
-%% =========================================================================
-%  SECTION 5e - FFT PERIOD OF RECURRENCE-DENSITY OSCILLATION
-%  =========================================================================
-fprintf('\nSection 5e: Dominant oscillation period of recurrence density...\n');
-
-Fs_rr = 1/(step_f/cfg.fs);
-osc = fn_dominantOscillationPeriod(rr_full_v, Fs_rr, cfg.fft_cutoff_period_s);
-dom_period = osc.dom_period; %#ok<NASGU>
-fn_plotDominantOscillation(osc, cfg.FIGURES_DIR);
+    
 
 %% =========================================================================
 %  SAVE
