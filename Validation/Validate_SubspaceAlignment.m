@@ -220,6 +220,5 @@ for i = 1:length(all_axes)
     grid(all_axes(i), 'off'); all_axes(i).Box = 'off';
 end
 exportgraphics(gcf, fullfile(cfg.FIGURES_DIR, 'validation_subspace_alignment.png'), 'Resolution', 500);
-close(gcf);
 
 fprintf('\n=== Synthetic Validation complete. ===\n');
