@@ -17,7 +17,7 @@ script that only calls those functions in sequence.
 2. **`Run_Attractor_Analysis.m`** - the main pipeline. Loads `cfg`, then
    calls the analysis and plotting functions in sequence (load/clean/smooth
    -> PCA -> windowed PCA & participation ratio -> subspace alignment ->
-   recurrence-density analysis -> attractor epoch detection -> FFT period),
+   recurrence-density analysis -> RR-based attractor epoch detection),
    saving all figures to `cfg.FIGURES_DIR` and a results `.mat` file to
    `cfg.RESULTS_DIR`.
 
