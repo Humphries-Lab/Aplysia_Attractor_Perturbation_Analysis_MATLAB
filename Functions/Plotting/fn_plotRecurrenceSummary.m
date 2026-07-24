@@ -49,6 +49,5 @@ ylim([-0.1 1.1]); box on;
 
 sgtitle(sprintf('%s | Recurrence density analysis  eps=%.4f', recording_ID, epsilon_rr), 'FontWeight','normal');
 exportgraphics(fig, fullfile(figuresDir, '05_recurrence_all.png'), 'Resolution', 500);
-close(fig);
 
 end
