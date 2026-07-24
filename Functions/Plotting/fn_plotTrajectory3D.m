@@ -28,6 +28,5 @@ zlabel(sprintf('PC3 (%.1f%%)',var_exp(3)));
 legend('Pre-C2','Post-C2','P9 onset','C2 onset'); grid on; view([-35 25]);
 title(sprintf('Population trajectory | %s', recording_ID));
 exportgraphics(fig, fullfile(figuresDir,'02_trajectory_3D.png'), 'Resolution', 500);
-close(fig);
 
 end
