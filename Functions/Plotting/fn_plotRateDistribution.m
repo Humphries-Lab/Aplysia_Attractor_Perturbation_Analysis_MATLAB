@@ -16,6 +16,5 @@ legend([rl, gl], ...
     'Location','northeast','FontSize',9);
 grid on;
 exportgraphics(fig, fullfile(figuresDir,'01a_rate_distribution.png'), 'Resolution', 500);
-close(fig);
 
 end
