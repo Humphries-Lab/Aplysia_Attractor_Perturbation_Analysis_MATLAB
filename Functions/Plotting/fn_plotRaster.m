@@ -28,6 +28,5 @@ xline(t_C2,'b-','LineWidth',2,'Label','C2');
 xlabel('Time (s)'); ylabel('Population events / s');
 title('Population activity (1 s bins)'); grid on; xlim([0 nFrames/fs]);
 exportgraphics(fig, fullfile(figuresDir,'01b_raster.png'), 'Resolution', 500);
-close(fig);
 
 end
