@@ -54,6 +54,49 @@ script that only calls those functions in sequence.
    `Run_Attractor_Analysis.m` - keep plotting code out of the analysis
    functions, and analysis code out of the plotting functions.
 
+## Group-level analysis (across recordings)
+
+`Run_Attractor_Analysis.m` only ever processes **one** recording at a
+time and saves one `<recording_ID>_results.mat` per run. Once you've run
+it for every animal/recording in your dataset, pool the results with
+`Functions/GroupLevel/fn_groupLevelAnalysis.m`:
+
+```matlab
+ids   = {'Animal1_Trial1','Animal2_Trial1','Animal3_Trial1'};
+group = fn_groupLevelAnalysis(cfg.RESULTS_DIR, ids);
+% or, to auto-discover every '*_results.mat' file in RESULTS_DIR:
+group = fn_groupLevelAnalysis(cfg.RESULTS_DIR, {});
+```
+
+This is a **wrapper, not a statistics tool**. It loads each
+recording's `.mat` file and pulls a fixed set of scalar metrics into one
+row-per-recording table (`group.summaryTable`), computed under both
+epoch definitions the pipeline produces:
+
+| Metric family | Fixed epochs (protocol timing) | Attractor(RR)-defined epochs |
+|---|---|---|
+| Participation ratio | `PR_norm_Baseline/Evoked/Recovery` | `PR_norm_rr_Baseline/AttractorEvoked/AttractorRecovery` |
+| Subspace alignment | `align_ER`, `align_ER_corrected`, `chance_lvl` | `align_ER_rr` |
+| Recurrence rate | `RQA_ev_RR`, `RQA_re_RR` (self, own epsilon) | `cross_recur_density` (cross, shared epsilon) |
+| Onset/return timing | `t_attractor_onset`, `t_attractor_return`, `onset_detected`, `return_detected` | - |
+
+It does **not** choose or run any test - which one is appropriate
+depends on experimental-design choices (paired vs unpaired structure, N
+animals, planned vs exploratory comparisons, etc.) that only the
+experimentalist can make. `help fn_groupLevelAnalysis` documents, per
+metric family:
+
+- candidate statistical tests,
+- the design parameters to decide first,
+- and how to check whether a result is sensitive to the fixed-vs-
+  attractor-defined epoch choice.
+
+Restrict or extend which fields get pulled with the `'Metrics'`
+name-value pair; anything scalar saved by `Run_Attractor_Analysis`'s
+SAVE block can be requested. Full per-window timeseries (e.g. `pr_t`/
+`pr_v`, `al_t`/`al_v`) are not flattened into the table but remain
+available per recording in `group.raw`.
+
 ## Things to be aware of
 
 - All functions assume `spike_conv` (Gaussian-smoothed activity) is
