@@ -37,6 +37,12 @@ script that only calls those functions in sequence.
   use no real recording data):
   - `Validate_SubspaceAlignment.m`
   - `Validate_RecurrenceDensity.m`
+- **`GroupLevel/`** - standalone, user-invoked script for pooling results
+  across recordings once `Run_Attractor_Analysis.m` has been run for
+  every animal. Like `Validation/`, it sits outside `Functions/` because
+  nothing in the single-recording pipeline calls it - see "Group-level
+  analysis" below.
+  - `fn_groupLevelAnalysis.m`
 - **`Results/`**, **`Figures/`** - default output locations (see `Config_UserSettings.m`).
 
 ## How do I use this with my own data?
@@ -59,7 +65,9 @@ script that only calls those functions in sequence.
 `Run_Attractor_Analysis.m` only ever processes **one** recording at a
 time and saves one `<recording_ID>_results.mat` per run. Once you've run
 it for every animal/recording in your dataset, pool the results with
-`Functions/GroupLevel/fn_groupLevelAnalysis.m`:
+`GroupLevel/fn_groupLevelAnalysis.m` - a standalone script that sits
+outside `Functions/` because nothing in the single-recording pipeline
+calls it (same reasoning as `Validation/`):
 
 ```matlab
 ids   = {'Animal1_Trial1','Animal2_Trial1','Animal3_Trial1'};
