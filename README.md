@@ -80,22 +80,15 @@ epoch definitions the pipeline produces:
 | Recurrence rate | `RQA_ev_RR`, `RQA_re_RR` (self, own epsilon) | `cross_recur_density` (cross, shared epsilon) |
 | Onset/return timing | `t_attractor_onset`, `t_attractor_return`, `onset_detected`, `return_detected` | - |
 
-It does **not** choose or run any test - which one is appropriate
-depends on experimental-design choices (paired vs unpaired structure, N
-animals, planned vs exploratory comparisons, etc.) that only the
-experimentalist can make. `help fn_groupLevelAnalysis` documents, per
-metric family:
+By default it also saves the pooled table to
+`<RESULTS_DIR>/GroupLevel_Summary.mat` (pass `'SaveTable', false` to skip
+this). It is **not** called automatically by `Run_Attractor_Analysis.m`
+or anywhere else - run it yourself once every recording is done.
 
-- candidate statistical tests,
-- the design parameters to decide first,
-- and how to check whether a result is sensitive to the fixed-vs-
-  attractor-defined epoch choice.
-
-Restrict or extend which fields get pulled with the `'Metrics'`
-name-value pair; anything scalar saved by `Run_Attractor_Analysis`'s
-SAVE block can be requested. Full per-window timeseries (e.g. `pr_t`/
-`pr_v`, `al_t`/`al_v`) are not flattened into the table but remain
-available per recording in `group.raw`.
+It does not choose or run any statistical test - see `help
+fn_groupLevelAnalysis` for the full menu of candidate tests, the design
+parameters to decide first, and how to check whether a result depends on
+the fixed-vs-attractor-defined epoch choice.
 
 ## Things to be aware of
 
