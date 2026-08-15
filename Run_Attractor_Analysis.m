@@ -283,3 +283,18 @@ save(save_path, ...
     '-v7.3');
 
 fprintf('\nSaved: %s\nDone.\n', save_path);
+
+%% =========================================================================
+%  SECTION 6 - GROUP-LEVEL ANALYSIS (OUTSIDE the single-recording run)
+%  =========================================================================
+%  Run_Attractor_Analysis processes ONE recording at a time. Once every
+%  animal/recording has been run (each producing its own
+%  '<recording_ID>_results.mat' in cfg.RESULTS_DIR), pool them SEPARATELY
+%  with fn_groupLevelAnalysis (Functions/GroupLevel/fn_groupLevelAnalysis.m):
+%
+%     ids   = {'Animal1_Trial1','Animal2_Trial1','Animal3_Trial1'};
+%     group = fn_groupLevelAnalysis(cfg.RESULTS_DIR, ids);
+%
+%  This is a wrapper, not a statistics tool - see `help
+%  fn_groupLevelAnalysis` (or the README's "Group-level analysis"
+%  section) for the full parameter list and the menu of candidate tests.
