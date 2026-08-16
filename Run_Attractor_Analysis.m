@@ -285,16 +285,16 @@ save(save_path, ...
 fprintf('\nSaved: %s\nDone.\n', save_path);
 
 %% =========================================================================
-%  SECTION 6 - GROUP-LEVEL ANALYSIS (OUTSIDE this single-recording run)
+%  SECTION 6 - COHORT-LEVEL ANALYSIS (OUTSIDE the single-recording run)
 %  =========================================================================
 %  Run_Attractor_Analysis processes ONE recording at a time. Once every
 %  animal/recording has been run (each producing its own
 %  '<recording_ID>_results.mat' in cfg.RESULTS_DIR), pool them SEPARATELY
-%  with fn_groupLevelAnalysis (GroupLevel/fn_groupLevelAnalysis.m - a
+%  with fn_cohortAnalysis (CohortAnalysis/fn_cohortAnalysis.m - a
 %  top-level standalone script, not one of the pipeline's Functions/):
 %
-%     ids   = {'Animal1_Trial1','Animal2_Trial1','Animal3_Trial1'};
-%     group = fn_groupLevelAnalysis(cfg.RESULTS_DIR, ids);
+%     ids    = {'Animal1_Trial1','Animal2_Trial1','Animal3_Trial1'};
+%     cohort = fn_cohortAnalysis(cfg.RESULTS_DIR, ids);
 %
-%  see `help fn_groupLevelAnalysis` (or the README's "Group-level analysis"
-%  section) for the full parameter list and the menu of candidate tests.
+%  See `help fn_cohortAnalysis` (or the README's "Cohort-level analysis" section)
+%  for the full parameter list and the menu of candidate tests.
