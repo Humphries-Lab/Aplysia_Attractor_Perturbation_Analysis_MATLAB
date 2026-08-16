@@ -53,7 +53,7 @@ function cohort = fn_cohortAnalysis(RESULTS_DIR, recording_IDs, varargin)
 %  ------
 %  cohort.summaryTable - MATLAB table, one row per recording. Columns =
 %                        recording_ID, protocol, + requested Metrics.
-%  cohort.raw          - 1xN struct array, the untouched contents of
+%  cohort.raw          - 1xN cell array, the untouched contents of
 %                        every loaded '*_results.mat' file, indexed in
 %                        the same order as summaryTable's rows (for
 %                        anything not captured as a scalar summary,
@@ -139,7 +139,7 @@ function cohort = fn_cohortAnalysis(RESULTS_DIR, recording_IDs, varargin)
 %       Run_Attractor_Analysis.m Section 5). A recurrence density
 %       computed on the *fixed*-window-only portion (ignoring the
 %       detected lock time) is not saved as a scalar; if you want that
-%       comparison, derive it from cohort.raw(i).onset_win_v /
+%       comparison, derive it from cohort.raw{i}.onset_win_v /
 %       .return_win_v (full per-window recurrence-density timeseries,
 %       still available per recording) restricted to the fixed-window
 %       indices yourself.
@@ -255,7 +255,12 @@ if isempty(rows)
 else
     cohort.summaryTable = vertcat(rows{:});
 end
-cohort.raw     = [rawList{:}];
+% Stored as a cell array, not a struct array: different '<ID>_results.mat'
+% files can carry slightly different sets of saved fields (e.g. if they
+% were produced by different versions of Run_Attractor_Analysis.m), and
+% struct-array concatenation requires an identical field set across all
+% elements. A cell array has no such requirement. Index as cohort.raw{i}.
+cohort.raw     = rawList;
 cohort.missing = missing;
 
 if ~isempty(missing)
