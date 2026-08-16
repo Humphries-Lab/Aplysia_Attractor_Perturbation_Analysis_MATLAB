@@ -37,12 +37,12 @@ script that only calls those functions in sequence.
   use no real recording data):
   - `Validate_SubspaceAlignment.m`
   - `Validate_RecurrenceDensity.m`
-- **`GroupLevel/`** - standalone, user-invoked script for pooling results
-  across recordings once `Run_Attractor_Analysis.m` has been run for
-  every animal. Like `Validation/`, it sits outside `Functions/` because
-  nothing in the single-recording pipeline calls it - see "Group-level
-  analysis" below.
-  - `fn_groupLevelAnalysis.m`
+- **`CohortAnalysis/`** - standalone, user-invoked script for pooling
+  results across recordings once `Run_Attractor_Analysis.m` has been run
+  for every animal. Like `Validation/`, it sits outside `Functions/`
+  because nothing in the single-recording pipeline calls it - see
+  "Cohort-level analysis" below.
+  - `fn_cohortAnalysis.m`
 - **`Results/`**, **`Figures/`** - default output locations (see `Config_UserSettings.m`).
 
 ## How do I use this with my own data?
@@ -60,25 +60,25 @@ script that only calls those functions in sequence.
    `Run_Attractor_Analysis.m` - keep plotting code out of the analysis
    functions, and analysis code out of the plotting functions.
 
-## Group-level analysis (across recordings)
+## Cohort-level analysis (across recordings)
 
 `Run_Attractor_Analysis.m` only ever processes **one** recording at a
 time and saves one `<recording_ID>_results.mat` per run. Once you've run
 it for every animal/recording in your dataset, pool the results with
-`GroupLevel/fn_groupLevelAnalysis.m` - a standalone script that sits
+`CohortAnalysis/fn_cohortAnalysis.m` - a standalone script that sits
 outside `Functions/` because nothing in the single-recording pipeline
 calls it (same reasoning as `Validation/`):
 
 ```matlab
-ids   = {'Animal1_Trial1','Animal2_Trial1','Animal3_Trial1'};
-group = fn_groupLevelAnalysis(cfg.RESULTS_DIR, ids);
+ids    = {'Animal1_Trial1','Animal2_Trial1','Animal3_Trial1'};
+cohort = fn_cohortAnalysis(cfg.RESULTS_DIR, ids);
 % or, to auto-discover every '*_results.mat' file in RESULTS_DIR:
-group = fn_groupLevelAnalysis(cfg.RESULTS_DIR, {});
+cohort = fn_cohortAnalysis(cfg.RESULTS_DIR, {});
 ```
 
 This is a **wrapper, not a statistics tool**. It loads each
 recording's `.mat` file and pulls a fixed set of scalar metrics into one
-row-per-recording table (`group.summaryTable`), computed under both
+row-per-recording table (`cohort.summaryTable`), computed under both
 epoch definitions the pipeline produces:
 
 | Metric family | Fixed epochs (protocol timing) | Attractor(RR)-defined epochs |
@@ -89,12 +89,12 @@ epoch definitions the pipeline produces:
 | Onset/return timing | `t_attractor_onset`, `t_attractor_return`, `onset_detected`, `return_detected` | - |
 
 By default it also saves the pooled table to
-`<RESULTS_DIR>/GroupLevel_Summary.mat` (pass `'SaveTable', false` to skip
-this). It is **not** called automatically by `Run_Attractor_Analysis.m`
-or anywhere else - run it yourself once every recording is done.
+`<RESULTS_DIR>/CohortAnalysis_Summary.mat` (pass `'SaveTable', false` to
+skip this). It is **not** called automatically by
+`Run_Attractor_Analysis.m` or anywhere else - run it yourself once every
+recording is done.
 
-It does not choose or run any statistical test - see `help
-fn_groupLevelAnalysis` for the full menu of candidate tests, the design
+See `help fn_cohortAnalysis` for the full menu of candidate tests, the design
 parameters to decide first, and how to check whether a result depends on
 the fixed-vs-attractor-defined epoch choice.
 
