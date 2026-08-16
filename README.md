@@ -20,6 +20,10 @@ script that only calls those functions in sequence.
    recurrence-density analysis -> RR-based attractor epoch detection),
    saving all figures to `cfg.FIGURES_DIR` and a results `.mat` file to
    `cfg.RESULTS_DIR`.
+3. **`Run_Cohort_Analysis.m`** - run this AFTER `Run_Attractor_Analysis.m`
+   has been run for every animal/recording. Pools all
+   `<recording_ID>_results.mat` files into one table for cohort-level
+   statistics - see "Cohort-level analysis" below.
 
 ## Folders
 
@@ -37,11 +41,9 @@ script that only calls those functions in sequence.
   use no real recording data):
   - `Validate_SubspaceAlignment.m`
   - `Validate_RecurrenceDensity.m`
-- **`CohortAnalysis/`** - standalone, user-invoked script for pooling
-  results across recordings once `Run_Attractor_Analysis.m` has been run
-  for every animal. Like `Validation/`, it sits outside `Functions/`
-  because nothing in the single-recording pipeline calls it - see
-  "Cohort-level analysis" below.
+- **`CohortAnalysis/`** - the function that `Run_Cohort_Analysis.m` calls.
+  Sits outside `Functions/`, like `Validation/`, because nothing in the
+  single-recording pipeline calls it directly.
   - `fn_cohortAnalysis.m`
 - **`Results/`**, **`Figures/`** - default output locations (see `Config_UserSettings.m`).
 
@@ -62,21 +64,27 @@ script that only calls those functions in sequence.
 
 ## Cohort-level analysis (across recordings)
 
-`Run_Attractor_Analysis.m` only ever processes **one** recording at a
-time and saves one `<recording_ID>_results.mat` per run. Once you've run
-it for every animal/recording in your dataset, pool the results with
-`CohortAnalysis/fn_cohortAnalysis.m` - a standalone script that sits
-outside `Functions/` because nothing in the single-recording pipeline
-calls it (same reasoning as `Validation/`):
+Once you've run `Run_Attractor_Analysis.m` for every animal, run
+**`Run_Cohort_Analysis.m`** to pool the results:
 
 ```matlab
-ids    = {'Animal1_Trial1','Animal2_Trial1','Animal3_Trial1'};
-cohort = fn_cohortAnalysis(cfg.RESULTS_DIR, ids);
-% or, to auto-discover every '*_results.mat' file in RESULTS_DIR:
-cohort = fn_cohortAnalysis(cfg.RESULTS_DIR, {});
+Run_Cohort_Analysis
 ```
 
-This is a **wrapper, not a statistics tool**. It loads each
+Edit `recording_IDs` near the top first to list exactly which recordings
+belong in the cohort - the same convention EEGLAB uses for its
+`STUDY.subject` list. This is deliberate rather than auto-pooling
+"everything in the folder": it keeps a record of exactly what went into
+each cohort table, and won't silently include a stray or re-run file. If
+you'd rather auto-discover every `*_results.mat` file instead, the script
+has a commented-out line for that.
+
+It calls `fn_cohortAnalysis(RESULTS_DIR, recording_IDs)` and shows you
+`cohort.summaryTable` - one row per recording, ready for your own stats.
+See `help fn_cohortAnalysis` for what columns you get and the menu of
+candidate tests.
+
+**This is not a statistics tool**. It loads each
 recording's `.mat` file and pulls a fixed set of scalar metrics into one
 row-per-recording table (`cohort.summaryTable`), computed under both
 epoch definitions the pipeline produces:
@@ -94,7 +102,8 @@ skip this). It is **not** called automatically by
 `Run_Attractor_Analysis.m` or anywhere else - run it yourself once every
 recording is done.
 
-See `help fn_cohortAnalysis` for the full menu of candidate tests, the design
+It does not choose or run any statistical test - see `help
+fn_cohortAnalysis` for the full menu of candidate tests, the design
 parameters to decide first, and how to check whether a result depends on
 the fixed-vs-attractor-defined epoch choice.
 
