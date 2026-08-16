@@ -16,3 +16,9 @@ recording_IDs = {'Animal1_Trial1', 'Animal2_Trial1', 'Animal3_Trial1'};   % <-- 
 
 cohort = fn_cohortAnalysis(RESULTS_DIR, recording_IDs);
 cohort.summaryTable
+
+excelFilePath = fullfile(resultsDir, 'Cohort_Summary.xlsx');
+
+writetable(cohort.summaryTable, excelFilePath);
+
+disp(['Table successfully saved to: ', excelFilePath]);
