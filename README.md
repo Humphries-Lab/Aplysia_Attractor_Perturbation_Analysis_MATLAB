@@ -68,11 +68,9 @@ Once you've run `Run_Attractor_Analysis.m` for every animal, run
 **`Run_Cohort_Analysis.m`** to pool the results.
 
 Edit `recording_IDs` near the top first to list exactly which recordings
-belong in the cohort - the same convention EEGLAB uses for its
-`STUDY.subject` list. This is deliberate rather than auto-pooling
-"everything in the folder": it keeps a record of exactly what went into
-each cohort table, and won't silently include a stray or re-run file. If
-you'd rather auto-discover every `*_results.mat` file instead, the script
+belong to be analysed in a cohort. This is deliberate rather than auto-pooling
+everything in that folder, thus it keeps a record of exactly what went into
+each cohort table. If you'd rather auto-discover every `*_results.mat` file instead, the script
 has a commented-out line for that.
 
 It calls `fn_cohortAnalysis(RESULTS_DIR, recording_IDs)` and shows you
