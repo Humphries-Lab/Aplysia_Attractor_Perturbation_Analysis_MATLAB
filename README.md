@@ -78,10 +78,7 @@ has a commented-out line for that.
 It calls `fn_cohortAnalysis(RESULTS_DIR, recording_IDs)` and shows you
 `cohort.summaryTable` - one row per recording, ready for your own stats.
 See `help fn_cohortAnalysis` for what columns you get and the menu of
-candidate tests.
-
-**This is not a statistics tool**. It loads each
-recording's `.mat` file and pulls a fixed set of scalar metrics into one
+candidate tests. It loads each recording's `.mat` file and pulls a fixed set of scalar metrics into one
 row-per-recording table (`cohort.summaryTable`), computed under both
 epoch definitions the pipeline produces:
 
@@ -96,7 +93,7 @@ By default it also saves the pooled table to
 `<RESULTS_DIR>/CohortAnalysis_Summary.mat` (pass `'SaveTable', false` to
 skip this). It is **not** called automatically by
 `Run_Attractor_Analysis.m` or anywhere else - run it yourself once every
-recording is done.
+recording is done. **This is not a statistics tool**.
 
 ## Things to be aware of
 
