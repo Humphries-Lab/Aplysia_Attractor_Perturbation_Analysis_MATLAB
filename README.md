@@ -102,11 +102,6 @@ skip this). It is **not** called automatically by
 `Run_Attractor_Analysis.m` or anywhere else - run it yourself once every
 recording is done.
 
-It does not choose or run any statistical test - see `help
-fn_cohortAnalysis` for the full menu of candidate tests, the design
-parameters to decide first, and how to check whether a result depends on
-the fixed-vs-attractor-defined epoch choice.
-
 ## Things to be aware of
 
 - All functions assume `spike_conv` (Gaussian-smoothed activity) is
