@@ -9,26 +9,17 @@ function cohort = fn_cohortAnalysis(RESULTS_DIR, recording_IDs, varargin)
 %  -------
 %  Run_Attractor_Analysis.m is a SINGLE-RECORDING pipeline: it runs on
 %  one animal/session at a time and saves one '<recording_ID>_results.mat'
-%  per run. This function is the entry point for the step that comes
-%  AFTER that -- pooling those per-recording .mat files across animals
+%  per run. This function pools those per-recording .mat files across animals
 %  so the results are ready for cohort-level statistical testing.
 %
-%  This function is a WRAPPER / SCAFFOLD ONLY. It does not decide or run
-%  any statistical test. It only:
+%  It does not decide or run any statistical test. It only:
 %    1. Loads every requested '<recording_ID>_results.mat' from
 %       RESULTS_DIR
 %    2. Extracts a fixed set of scalar summary metrics per recording
 %       into one tidy row-per-animal table
 %    3. Returns that table (plus the untouched raw per-recording
-%       structs) so the experimentalist can apply whichever
-%       statistical test/model fits their design, sample size, and
-%       hypotheses -- see "STATISTICAL ANALYSIS" below.
+%       structs) 
 %
-%  Which test to run is deliberately NOT hard-coded here: it depends on
-%  experimental-design choices (paired vs unpaired structure, number of
-%  animals/recordings per animal, whether distributional assumptions
-%  hold, planned vs exploratory comparisons, etc.) that only the
-%  experimentalist can make.
 %
 %  INPUTS
 %  ------
@@ -61,146 +52,7 @@ function cohort = fn_cohortAnalysis(RESULTS_DIR, recording_IDs, varargin)
 %  cohort.missing      - cellstr of recording_IDs that were requested
 %                        but had no matching '*_results.mat' file, or
 %                        whose file failed to load.
-%
-%  =====================================================================
-%  STATISTICAL ANALYSIS -- LEFT TO THE EXPERIMENTALIST
-%  =====================================================================
-%  cohort.summaryTable is deliberately just tidy data. Below is a menu of
-%  what it is set up for, and the parameters that would need to be
-%  decided before running any test. No test is chosen or run here.
-%
-%  Run_Attractor_Analysis computes every metric under TWO epoch
-%  definitions, and the default table pulls both:
-%    - FIXED epochs      : Baseline / Evoked / Recovery, from protocol
-%                           timing alone (t_P9, t_C2, motor/recovery
-%                           delays) -- suffix-free column names below.
-%    - ATTRACTOR-DEFINED  : Baseline / Attractor-evoked / Attractor-
-%      (RR-based) epochs    recovery, from when recurrence density
-%                           actually crosses cfg.ONSET_RATIO -- '_rr'
-%                           suffix on column names below.
-%  Keeping both lets you check whether a result depends on how the
-%  epoch boundary was drawn (see item 6).
-%
-%  1) SUBSPACE ALIGNMENT vs CHANCE
-%     (columns: align_ER, align_ER_corrected, chance_lvl  |
-%      RR-defined: align_ER_rr)
-%     - Question: is evoked->recovery alignment above the chance level
-%       expected for random K-dim subspaces, and is that consistent
-%       across animals?
-%     - Candidate approaches: one-sample t-test or Wilcoxon signed-rank
-%       of align_ER_corrected against 0; a permutation/shuffle test
-%       using each animal's own chance_lvl as the null; bootstrap CI on
-%       the cohort mean of align_ER_corrected; the same tests repeated on
-%       align_ER_rr to see if attractor-defined epochs change the
-%       conclusion.
-%     - Parameters to decide: parametric vs non-parametric (depends on
-%       normality and N); one- vs two-tailed; align_ER_corrected already
-%       removes each animal's own chance level before pooling -- decide
-%       whether that per-animal correction is the right normalization
-%       for your question, or whether align_ER and chance_lvl should be
-%       modeled jointly instead (e.g. as a ratio, or with chance_lvl as
-%       a covariate). chance_lvl is shared by the fixed and RR-defined
-%       alignment values (K and N don't change, only the window does).
-%
-%  2) DIMENSIONALITY (PARTICIPATION RATIO) ACROSS EPOCHS
-%     (columns: PR_norm_Baseline, PR_norm_Evoked, PR_norm_Recovery |
-%      RR-defined: PR_norm_rr_Baseline, PR_norm_rr_AttractorEvoked,
-%      PR_norm_rr_AttractorRecovery)
-%     - Question: does normalized participation ratio change across
-%       epochs, and does that pattern hold across animals -- under
-%       either epoch definition?
-%     - Candidate approaches: repeated-measures ANOVA or a linear
-%       mixed-effects model (epoch as fixed effect, animal/recording as
-%       random intercept) for the 3-epoch comparison; a paired t-test
-%       or Wilcoxon signed-rank for a single pairwise contrast (e.g.
-%       Evoked vs Recovery only); repeat on the PR_norm_rr_* columns.
-%     - Parameters to decide: fixed-effects vs mixed-effects (mixed
-%       effects needed if there are multiple recordings per animal);
-%       sphericity assumption for RM-ANOVA; multiple-comparison
-%       correction across epoch pairs (Tukey, Bonferroni, or FDR).
-%
-%  3) RECURRENCE DENSITY / RATE
-%     (columns: RQA_ev_RR, RQA_re_RR -- fixed-epoch, own-epsilon self-
-%      recurrence for Evoked/Recovery; cross_recur_density -- shared-
-%      epsilon cross-recurrence, evoked found in recovery)
-%     - Question: do evoked / recovery / cross recurrence densities
-%       differ from each other, or from a null?
-%     - Candidate approaches: paired test (evoked vs recovery, within
-%       animal); comparison against a surrogate/shuffled null; effect
-%       size (Cohen's d or rank-biserial correlation) alongside any
-%       p-value.
-%     - Parameters to decide: whether recurrence densities (bounded on
-%       [0,1], often skewed) need a variance-stabilizing transform
-%       before a parametric test; whether the null should be analytic
-%       or resampled per animal. Note there is no separate "RR-defined"
-%       recurrence density column by default -- RQA_ev_RR/RQA_re_RR
-%       already come from the attractor-locked portion of each epoch
-%       when onset_detected/return_detected is true (see
-%       Run_Attractor_Analysis.m Section 5). A recurrence density
-%       computed on the *fixed*-window-only portion (ignoring the
-%       detected lock time) is not saved as a scalar; if you want that
-%       comparison, derive it from cohort.raw{i}.onset_win_v /
-%       .return_win_v (full per-window recurrence-density timeseries,
-%       still available per recording) restricted to the fixed-window
-%       indices yourself.
-%
-%  4) ATTRACTOR ONSET / RETURN TIMING
-%     (columns: t_attractor_onset, t_attractor_return, onset_detected,
-%      return_detected)
-%     - Question: is onset/return latency consistent across animals,
-%       and how reliably does detection succeed?
-%     - Candidate approaches: descriptive statistics (median/IQR) of
-%       latency given the typically small N in this kind of recording;
-%       report detection rate (mean of onset_detected/return_detected)
-%       as a proportion with a binomial CI; only move to inferential
-%       statistics on latency itself if N supports it.
-%     - Parameters to decide: how to handle non-detections (drop,
-%       impute, or treat as right-censored -- censored/survival methods
-%       may be more appropriate than dropping non-detections outright).
-%
-%  5) CROSS-CUTTING CONSIDERATIONS (all of the above)
-%     - N animals/recordings available, and whether that N supports the
-%       assumptions of a parametric test at all.
-%     - Family-wise correction if several of the metrics/epochs above
-%       are tested together (Bonferroni, Holm, or Benjamini-Hochberg
-%       FDR).
-%     - Whether comparisons are planned/confirmatory or exploratory --
-%       worth deciding, and ideally recording, before looking at the
-%       pooled table.
-%
-%  6) FIXED vs ATTRACTOR-DEFINED EPOCHS -- AGREEMENT / SENSITIVITY
-%     (compare any unsuffixed column to its '_rr' counterpart, e.g.
-%      PR_norm_Evoked vs PR_norm_rr_AttractorEvoked, or align_ER vs
-%      align_ER_rr)
-%     - Question: does the result depend on whether epoch boundaries
-%       come from fixed protocol timing or from detected attractor
-%       lock-on? If both give the same answer, that is itself evidence
-%       the result isn't an artifact of the epoch-timing choice.
-%     - Candidate approaches: paired test between the fixed and '_rr'
-%       version of the same metric (within animal); a Bland-Altman-
-%       style agreement plot (difference vs mean of the two
-%       definitions) rather than a significance test, since the goal is
-%       agreement, not detecting a difference; correlation between the
-%       two across animals as a weaker consistency check.
-%     - Parameters to decide: this is usually a robustness/sensitivity
-%       analysis rather than a hypothesis test in its own right -- worth
-%       deciding up front whether a formal test is even the right tool,
-%       versus reporting both epoch definitions alongside each other.
-%
-%  This function stops at producing cohort.summaryTable. Choosing (and
-%  running) the right test from the menu above -- or a different one
-%  entirely -- is a scientific judgment call for the experimentalist,
-%  not something this pipeline should decide on their behalf.
-%
-%  EXAMPLE
-%  -------
-%    ids = {'Animal1_Trial1','Animal2_Trial1','Animal3_Trial1'};
-%    cohort = fn_cohortAnalysis(cfg.RESULTS_DIR, ids);
-%
-%    % cohort.summaryTable is now ready for, e.g.:
-%    %   [~,p] = ttest(cohort.summaryTable.align_ER_corrected);
-%    % or a linear mixed-effects model / permutation test / etc. --
-%    % see the menu above for what to consider before picking one.
+
 
 % ---- parse optional Name-Value parameters ---------------------------------
 p = inputParser;
