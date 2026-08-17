@@ -65,11 +65,7 @@ script that only calls those functions in sequence.
 ## Cohort-level analysis (across recordings)
 
 Once you've run `Run_Attractor_Analysis.m` for every animal, run
-**`Run_Cohort_Analysis.m`** to pool the results:
-
-```matlab
-Run_Cohort_Analysis
-```
+**`Run_Cohort_Analysis.m`** to pool the results.
 
 Edit `recording_IDs` near the top first to list exactly which recordings
 belong in the cohort - the same convention EEGLAB uses for its
