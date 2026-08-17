@@ -8,7 +8,7 @@ addpath('CohortAnalysis');
 RESULTS_DIR = 'Results';   % <-- EDIT if your results are saved somewhere else
 
 % List exactly which recordings belong in this cohort -
-recording_IDs = {'Animal1_Trial1', 'Animal2_Trial1', 'Animal3_Trial1'};   % <-- EDIT (don't include _results.mat)
+recording_IDs = {'Animal1_Trial1', 'Animal2_Trial1', 'Animal3_Trial1'};   % <-- EDIT (don't include '_results.mat')
 
 % To pool every '*_results.mat' file in RESULTS_DIR instead, comment the
 % line above out and uncomment this one:
