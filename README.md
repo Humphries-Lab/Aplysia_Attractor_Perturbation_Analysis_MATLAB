@@ -64,14 +64,8 @@ script that only calls those functions in sequence.
 
 ## Cohort-level analysis (across recordings)
 
-Once you've run `Run_Attractor_Analysis.m` for every animal, run
-**`Run_Cohort_Analysis.m`** to pool the results:
-
-```matlab
-Run_Cohort_Analysis
-```
-
-Edit `recording_IDs` near the top first to list exactly which recordings
+Once you have run `Run_Attractor_Analysis.m` for every animal, run
+**`Run_Cohort_Analysis.m`** to pool the results. Edit `recording_IDs` near the top first to list exactly which recordings
 belong to be analysed in a cohort. This is deliberate rather than auto-pooling
 everything in that folder, thus it keeps a record of exactly what went into
 each cohort table. If you'd rather auto-discover every `*_results.mat` file instead, 
