@@ -107,10 +107,10 @@ Comparing the fixed vs `_rr` version of the same metric is itself a
 useful check: if a result holds up under both, it's less likely to be an
 artifact of how the epoch boundary was drawn.
 
-### What each column means
+### What each variable means
 
 **Subspace alignment** (Evoked subspace vs Recovery subspace)
-| Column | Meaning |
+| Variable | Meaning |
 |---|---|
 | `align_ER` | Raw alignment score (0-1) between the Evoked and Recovery population subspaces (Elsayed & Cunningham method), fixed epochs. Higher = the two epochs occupy more similar directions in neural state space. |
 | `chance_lvl` | The alignment score expected by chance for two *randomly oriented* subspaces of the same dimensionality (`= K/N`, i.e. `nDims_align / nN`). Not zero - random subspaces still overlap somewhat, more so in low-dimensional recordings. |
@@ -119,13 +119,13 @@ artifact of how the epoch boundary was drawn.
 | `align_ER_rr` | Same idea as `align_ER` (**raw**, not chance-corrected), but computed between the attractor-defined Evoked/Recovery epochs instead of the fixed-time ones. There is no chance-corrected counterpart for the `_rr` epochs in the current pipeline - if you need one, compute `(align_ER_rr - chance_lvl) / (1 - chance_lvl)` yourself before comparing `align_ER_rr` across animals, for the same reason `align_ER_corrected` exists for the fixed-epoch version. |
 
 **Participation ratio** (dimensionality of population activity within an epoch, normalized by neuron count so it's comparable across recordings with different N)
-| Column | Meaning |
+| Variable | Meaning |
 |---|---|
 | `PR_norm_Baseline` / `_Evoked` / `_Recovery` | Normalized participation ratio in each fixed epoch. Higher = activity is more spread across many dimensions (higher-dimensional); lower = more collapsed onto a few dominant directions. |
 | `PR_norm_rr_Baseline` / `_AttractorEvoked` / `_AttractorRecovery` | Same metric, computed in the attractor-defined epochs instead. |
 
 **Recurrence rate** (how often the population's trajectory revisits nearby states - a signature of being "on an attractor")
-| Column | Meaning |
+| Variable | Meaning |
 |---|---|
 | `RQA_ev_RR` | Self-recurrence density within the Evoked epoch: how often Evoked-epoch states recur *within the Evoked epoch itself*, using an epsilon (distance threshold) calibrated on that epoch's own trajectory. |
 | `RQA_re_RR` | Same idea, self-recurrence within the Recovery epoch, using Recovery's own calibrated epsilon. |
@@ -133,7 +133,7 @@ artifact of how the epoch boundary was drawn.
 | `epsilon_rr` / `epsilon_re` | The calibrated distance thresholds themselves (Evoked-epoch and Recovery-epoch respectively) - useful for sanity-checking whether two recordings used comparable thresholds, less useful as an analysis variable in its own right. |
 
 **Attractor onset/return timing** (attractor-defined epochs only - these are what define the `_rr` epoch boundaries above)
-| Column | Meaning |
+| Variable | Meaning |
 |---|---|
 | `t_attractor_onset` | Time (s) the population first detectably locked onto a recurring state after the stimulus. |
 | `t_attractor_return` | Time (s) it detectably left that state again. |
