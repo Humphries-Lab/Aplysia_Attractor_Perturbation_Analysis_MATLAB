@@ -82,7 +82,7 @@ you get and the menu of candidate tests.
 This loads each recording's `.mat` file and pulls a fixed set of scalar metrics into one
 row-per-recording table (`cohort.summaryTable`). 
 
-### The two epoch definitions
+### What is the difference between fixed and RR-defined epochs?
 
 Every metric below is computed twice, under two different ways of
 deciding where "Evoked" ends and "Recovery" begins - the column name
