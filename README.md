@@ -65,27 +65,87 @@ script that only calls those functions in sequence.
 ## Cohort-level analysis (across recordings)
 
 Once you've run `Run_Attractor_Analysis.m` for every animal, run
-**`Run_Cohort_Analysis.m`** to pool the results.
+**`Run_Cohort_Analysis.m`** to pool the results:
+
+```matlab
+Run_Cohort_Analysis
+```
 
 Edit `recording_IDs` near the top first to list exactly which recordings
 belong to be analysed in a cohort. This is deliberate rather than auto-pooling
 everything in that folder, thus it keeps a record of exactly what went into
-each cohort table. If you'd rather auto-discover every `*_results.mat` file instead, the script
-has a commented-out line for that.
+each cohort table. If you'd rather auto-discover every `*_results.mat` file instead, 
+the script has a commented-out line for that.
 
-It calls `fn_cohortAnalysis(RESULTS_DIR, recording_IDs)` and shows you
-`cohort.summaryTable` - one row per recording, ready for your own stats.
-See `help fn_cohortAnalysis` for what columns you get and the menu of
-candidate tests. It loads each recording's `.mat` file and pulls a fixed set of scalar metrics into one
-row-per-recording table (`cohort.summaryTable`), computed under both
-epoch definitions the pipeline produces:
+It calls `fn_cohortAnalysis(RESULTS_DIR, recording_IDs)`, shows you
+`cohort.summaryTable`, and saves two summary figures to
+`RESULTS_DIR/CohortFigures/` (PR across epochs, one line per animal;
+chance-corrected alignment, one bar per animal) via
+`Functions/Plotting/fn_plotCohortPR.m` and
+`fn_plotCohortAlignment.m`. See `help fn_cohortAnalysis` for what columns
+you get and the menu of candidate tests.
 
-| Metric family | Fixed epochs (protocol timing) | Attractor(RR)-defined epochs |
-|---|---|---|
-| Participation ratio | `PR_norm_Baseline/Evoked/Recovery` | `PR_norm_rr_Baseline/AttractorEvoked/AttractorRecovery` |
-| Subspace alignment | `align_ER`, `align_ER_corrected`, `chance_lvl` | `align_ER_rr` |
-| Recurrence rate | `RQA_ev_RR`, `RQA_re_RR` (self, own epsilon) | `cross_recur_density` (cross, shared epsilon) |
-| Onset/return timing | `t_attractor_onset`, `t_attractor_return`, `onset_detected`, `return_detected` | - |
+This loads each recording's `.mat` file and pulls a fixed set of scalar metrics into one
+row-per-recording table (`cohort.summaryTable`). 
+
+### The two epoch definitions
+
+Every metric below is computed twice, under two different ways of
+deciding where "Evoked" ends and "Recovery" begins - the column name
+tells you which one you're looking at:
+
+- **Fixed epochs** (no suffix, e.g. `PR_norm_Evoked`, `align_ER`) - epoch
+  boundaries come from protocol timing alone: fixed delays after the
+  stimulus markers (`t_P9`, `t_C2`), the same for every recording of a
+  given protocol duration. Simple and consistent across animals, but
+  assumes every animal's population actually settles into
+  Evoked/Recovery dynamics on the same fixed clock.
+- **Attractor-defined / RR-defined epochs** (`_rr` suffix, e.g.
+  `PR_norm_rr_AttractorEvoked`, `align_ER_rr`) - epoch boundaries come
+  from the data itself: the point where recurrence density actually
+  crosses `cfg.ONSET_RATIO`, i.e. when the population's own trajectory
+  detectably "locks onto" a recurring state (`t_attractor_onset`) and
+  when it detectably leaves it again (`t_attractor_return`). Adapts to
+  each animal, but only as trustworthy as `onset_detected`/
+  `return_detected` being `true` for that recording (see below).
+
+Comparing the fixed vs `_rr` version of the same metric is itself a
+useful check: if a result holds up under both, it's less likely to be an
+artifact of how the epoch boundary was drawn.
+
+### What each column means
+
+**Subspace alignment** (Evoked subspace vs Recovery subspace)
+| Column | Meaning |
+|---|---|
+| `align_ER` | Raw alignment score (0-1) between the Evoked and Recovery population subspaces (Elsayed & Cunningham method), fixed epochs. Higher = the two epochs occupy more similar directions in neural state space. |
+| `chance_lvl` | The alignment score expected by chance for two *randomly oriented* subspaces of the same dimensionality (`= K/N`, i.e. `nDims_align / nN`). Not zero - random subspaces still overlap somewhat, more so in low-dimensional recordings. |
+| `align_ER_corrected` | `align_ER` rescaled against `chance_lvl`: `(align_ER - chance_lvl) / (1 - chance_lvl)`. 0 = exactly chance, 1 = perfect alignment. **Use this one, not `align_ER`, when comparing across animals** - different animals can have different `chance_lvl` (different N or K), so raw `align_ER` values aren't directly comparable to each other, but the corrected value is. |
+| `nDims_align` | K, the number of dimensions the alignment was computed in (chosen automatically from the Evoked epoch; same K used for both fixed and `_rr` alignment). |
+| `align_ER_rr` | Same idea as `align_ER` (**raw**, not chance-corrected), but computed between the attractor-defined Evoked/Recovery epochs instead of the fixed-time ones. There is no chance-corrected counterpart for the `_rr` epochs in the current pipeline - if you need one, compute `(align_ER_rr - chance_lvl) / (1 - chance_lvl)` yourself before comparing `align_ER_rr` across animals, for the same reason `align_ER_corrected` exists for the fixed-epoch version. |
+
+**Participation ratio** (dimensionality of population activity within an epoch, normalized by neuron count so it's comparable across recordings with different N)
+| Column | Meaning |
+|---|---|
+| `PR_norm_Baseline` / `_Evoked` / `_Recovery` | Normalized participation ratio in each fixed epoch. Higher = activity is more spread across many dimensions (higher-dimensional); lower = more collapsed onto a few dominant directions. |
+| `PR_norm_rr_Baseline` / `_AttractorEvoked` / `_AttractorRecovery` | Same metric, computed in the attractor-defined epochs instead. |
+
+**Recurrence rate** (how often the population's trajectory revisits nearby states - a signature of being "on an attractor")
+| Column | Meaning |
+|---|---|
+| `RQA_ev_RR` | Self-recurrence density within the Evoked epoch: how often Evoked-epoch states recur *within the Evoked epoch itself*, using an epsilon (distance threshold) calibrated on that epoch's own trajectory. |
+| `RQA_re_RR` | Same idea, self-recurrence within the Recovery epoch, using Recovery's own calibrated epsilon. |
+| `cross_recur_density` | Cross-recurrence: how often Evoked-epoch states recur *within the Recovery epoch*, using one shared epsilon (calibrated on Evoked). This is the one that speaks to whether Recovery actually returns to the same states visited during Evoked, rather than just being locally self-consistent. |
+| `epsilon_rr` / `epsilon_re` | The calibrated distance thresholds themselves (Evoked-epoch and Recovery-epoch respectively) - useful for sanity-checking whether two recordings used comparable thresholds, less useful as an analysis variable in its own right. |
+
+**Attractor onset/return timing** (attractor-defined epochs only - these are what define the `_rr` epoch boundaries above)
+| Column | Meaning |
+|---|---|
+| `t_attractor_onset` | Time (s) the population first detectably locked onto a recurring state after the stimulus. |
+| `t_attractor_return` | Time (s) it detectably left that state again. |
+| `onset_detected` / `return_detected` | `true` if that lock-on/release was genuinely detected; `false` means detection failed and `t_attractor_onset`/`t_attractor_return` is a fallback value, **not a real timestamp** - check these flags before using the timing columns, and before trusting any `_rr` column for that recording, since the `_rr` epochs are built from these same timestamps. |
+
+`recording_ID` and `protocol` are carried through as-is for reference/filtering.
 
 By default it also saves the pooled table to
 `<RESULTS_DIR>/CohortAnalysis_Summary.mat` (pass `'SaveTable', false` to
