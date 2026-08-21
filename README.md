@@ -73,7 +73,7 @@ the script has a commented-out line for that.
 
 It calls `fn_cohortAnalysis(RESULTS_DIR, recording_IDs)`, shows you
 `cohort.summaryTable`. This loads each recording's `.mat` file and pulls a fixed set of scalar metrics into one
-row-per-recording table and saves it in a excel sheet. 
+row-per-recording table and saves it in a excel sheet which can be used further for statistics. 
 
 ### What is the difference between fixed and RR-defined epochs?
 
