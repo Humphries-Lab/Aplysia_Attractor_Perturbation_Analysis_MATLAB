@@ -72,15 +72,8 @@ each cohort table. If you'd rather auto-discover every `*_results.mat` file inst
 the script has a commented-out line for that.
 
 It calls `fn_cohortAnalysis(RESULTS_DIR, recording_IDs)`, shows you
-`cohort.summaryTable`, and saves two summary figures to
-`RESULTS_DIR/CohortFigures/` (PR across epochs, one line per animal;
-chance-corrected alignment, one bar per animal) via
-`Functions/Plotting/fn_plotCohortPR.m` and
-`fn_plotCohortAlignment.m`. See `help fn_cohortAnalysis` for what columns
-you get and the menu of candidate tests.
-
-This loads each recording's `.mat` file and pulls a fixed set of scalar metrics into one
-row-per-recording table (`cohort.summaryTable`). 
+`cohort.summaryTable`. This loads each recording's `.mat` file and pulls a fixed set of scalar metrics into one
+row-per-recording table and saves it in a excel sheet. 
 
 ### What is the difference between fixed and RR-defined epochs?
 
