@@ -1,5 +1,5 @@
 %% RUN_EVOKED_ANALYSIS
-%  Attractor / population-dynamics analysis for a single P9
+%  Attractor analysis for a single P9
 %  stimulus-evoked motor program with no perturbation (Baseline + Evoked
 %  only, no Recovery epoch).
 %
@@ -187,7 +187,7 @@ fprintf('  Baseline recurrence density (evoked eps): %.3f\n', base_recur_density
 fprintf('  Cross-recurrence density (Baseline found in Evoked): %.3f\n', cross_recur_density);
 
 % No Recovery epoch exists, so fn_plotRecurrenceSummary is called with
-% traj_ev/t_ev_ax standing in for Recovery (well-formed dummy data);
+% traj_ev/t_ev_ax standing in for Recovery (dummy data);
 % fn_plotRecurrenceSummary_evoked then deletes the resulting Recovery /
 % cross-recurrence panels and replaces them with a "No Recovery epoch"
 % label. 
@@ -218,7 +218,7 @@ end
 
 % fn_plotEpochDetection requires a return_ struct; return_placeholder has
 % detected=false (skips Recovery shading) and empty win_t/win_v/
-% win_v_fixed so its unconditional plot() calls are harmless no-ops.
+% win_v_fixed so its unconditional plot() calls are no-ops.
 return_placeholder.detected    = false;
 return_placeholder.t_lock      = NaN;
 return_placeholder.win_t       = [];
