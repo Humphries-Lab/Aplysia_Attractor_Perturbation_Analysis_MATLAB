@@ -24,6 +24,7 @@ end
 
 cfg.RESULTS_DIR = fullfile(toolboxRoot, 'Results');
 cfg.FIGURES_DIR = fullfile(toolboxRoot, 'Figures');
+cfg.LOGS_DIR = fullfile(toolboxRoot, 'Logs');
 
 % ---- Recording metadata --------------------------------------------------
 cfg.recording_ID = 'Sep12';   % EDIT AS REQUIRED 
