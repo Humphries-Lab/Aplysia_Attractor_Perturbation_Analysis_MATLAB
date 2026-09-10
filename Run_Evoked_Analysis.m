@@ -28,15 +28,12 @@ if ~isfile(cfgFile)
 end
 run(cfgFile);   % defines `cfg`
 
-if ~exist(cfg.RESULTS_DIR,'dir'), mkdir(cfg.RESULTS_DIR); end
-if ~exist(cfg.FIGURES_DIR,'dir'), mkdir(cfg.FIGURES_DIR); end
-% Append the recording_ID to the base figures directory and create the subfolder
+if ~exist(cfg.RESULTS_DIR, 'dir'), mkdir(cfg.RESULTS_DIR); end
 cfg.FIGURES_DIR = fullfile(cfg.FIGURES_DIR, cfg.recording_ID);
-if ~exist(cfg.FIGURES_DIR,'dir'), mkdir(cfg.FIGURES_DIR); end
-
+if ~exist(cfg.FIGURES_DIR, 'dir'), mkdir(cfg.FIGURES_DIR); end
 if ~exist(cfg.LOGS_DIR,'dir'), mkdir(cfg.LOGS_DIR); end
 diary off;   % close any diary left open by a previous run that errored mid-way
-logFile = fullfile(cfg.LOGS_DIR, sprintf('%s_log_%s.txt', cfg.recording_ID, datestr(now,'yyyymmdd_HHMMSS')));
+logFile = fullfile(cfg.LOGS_DIR, sprintf('%s_log.txt', cfg.recording_ID));
 diary(logFile);
 diary on;
 fprintf('Logging command window output to: %s\n', logFile);
@@ -299,6 +296,19 @@ save(save_path, ...
 
 fprintf('\nSaved: %s\nDone.\n', save_path);
 diary off;
+
+%% =========================================================================
+%  SECTION 6 - COHORT-LEVEL ANALYSIS (OUTSIDE the single-recording run)
+%  ========================================================================
+%  Run_Sensitization_Analysis processes ONE recording at a time. Once every
+%  animal/recording has been run (each producing its own
+%  '<recording_ID>_results_sensitization.mat' in cfg.RESULTS_DIR), pool them 
+%  SEPARATELY using cohort analysis tools:
+%
+%      ids    = {'Animal1_Trial1', 'Animal2_Trial1', 'Animal3_Trial1'};
+%      cohort = fn_cohortAnalysis_sensitization(cfg.RESULTS_DIR, ids);
+%
+%  Refer to the repo README for cohort-level parameter specifications.
 
 %% =========================================================================
 %  LOCAL FUNCTIONS
