@@ -12,9 +12,9 @@ cfg = struct();
 % ---- Paths --------------------------------------------------------------
 % cfg.DATA_FILE_INPUT accepts either:
 %   - a bare filename, e.g. 'Sep1225.mat'  -> resolved relative to toolboxRoot
-%   - a full path anywhere on disk, e.g. 'D:\Data\Sep1225.mat', or
+%   - a full path anywhere on disk, e.g. 'C:\Data\Sep1225.mat', or
 %     '/home/user/data/Sep1225.mat' -> used as-is
-cfg.DATA_FILE_INPUT = 'YourDataFile.mat';   % <-- EDIT THIS
+cfg.DATA_FILE_INPUT = 'data.mat';   % <-- EDIT THIS
 [pathPart, ~, ~] = fileparts(cfg.DATA_FILE_INPUT);
 if isempty(pathPart)
     cfg.DATA_FILE = fullfile(toolboxRoot, cfg.DATA_FILE_INPUT);
@@ -24,9 +24,10 @@ end
 
 cfg.RESULTS_DIR = fullfile(toolboxRoot, 'Results');
 cfg.FIGURES_DIR = fullfile(toolboxRoot, 'Figures');
+
 % ---- Recording metadata --------------------------------------------------
-cfg.recording_ID = 'RecID';   % like Jan01/Feb25 etc. 
-cfg.protocol     = '12min';   % '12min' or '20min'
+cfg.recording_ID = 'Sep12';   % EDIT AS REQUIRED 
+cfg.protocol     = '12min';   % EDIT AS REQUIRED --> '12min' or '20min' etc. [or '25min' (for concatenated files]
 cfg.fs           = 1629;      % sampling rate (fps)
 
 % ---- Data loading ---------------------------------------------------------
@@ -37,6 +38,8 @@ cfg.min_rate = 0.01;          % Hz, minimum mean event rate to keep a neuron
 cfg.max_rate = 50;            % Hz, maximum mean event rate to keep a neuron
 
 % ---- Epoch timing --------------------------------------------------------
+cfg.t_P9_evoked  = 120;   % s, stimulus onset --> EDIT AS REQUIRED
+cfg.t_end_evoked = 420;   % s, end of recording/analysis window --> EDIT AS REQUIRED
 cfg.motor_buffer_s   = 30;    % s, buffer after P9 before calling it "Evoked"
 cfg.recovery_delay_s = 60;    % s, delay after C2 before calling it "Recovery"
 
@@ -46,7 +49,7 @@ cfg.slide_step_s =  5;        % s
 
 % ---- PCA / subspace alignment --------------------------------------------
 cfg.K_ALIGN        = 'auto';  % 'auto' = dims at cfg.align_var_thresh_pct evoked variance; or integer
-cfg.align_var_thresh_pct = 80;% percent evoked variance for 'auto' K choice
+cfg.align_var_thresh_pct = 80; % percent evoked variance for 'auto' K choice
 cfg.pca_block_size = 5000;    % columns per block for covariance accumulation
 
 % ---- Recurrence-density analysis -----------------------------------------
@@ -54,6 +57,7 @@ cfg.MAX_WIN_PTS  = 500;       % downsample target, per-epoch trajectories (plots
 cfg.MAX_FULL_PTS = 4000;      % downsample target, full-recording pass
 cfg.MIN_LAG_S    = 2.0;       % Theiler-window-style minimum lag
 cfg.ONSET_RATIO  = 0.90;      % recurrence-density criterion for "locked on"
+cfg.EPS_PCTILE   = 10;        % percentile of pairwise distances used to calibrate epsilon_rr
 
 % ---- Principled RR threshold (documentation only; not currently used by
 %      the epoch-detection logic, which is percentile/ratio based - kept
