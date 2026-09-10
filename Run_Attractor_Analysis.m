@@ -134,9 +134,9 @@ mu_global = mean(spike_conv, 2);
 
 % Calibrate epsilon from the Evoked epoch (density-matched percentile)
 [traj_ep_global, ~] = fn_getEpochTrajectory(spike_conv, round(t_evoked_start*cfg.fs), round(t_C2*cfg.fs), ...
-    cfg.fs, V, mu_global, 1500);
-epsilon_rr = prctile(pdist(traj_ep_global,'euclidean'), 10);
-fprintf('  eps = %.4f  (10th pct of evoked pairwise distances)\n', epsilon_rr);
+    cfg.fs, V, mu_global, cfg.MAX_FULL_PTS);
+epsilon_rr = prctile(pdist(traj_ep_global,'euclidean'), cfg.EPS_PCTILE);
+fprintf('  eps = %.4f  (%gth pct of evoked pairwise distances)\n', epsilon_rr, cfg.EPS_PCTILE);
 
 % Full-recording per-point recurrence, binned into the sliding-window grid
 [traj_full, t_full] = fn_getEpochTrajectory(spike_conv, 1, nFrames, cfg.fs, V, mu_global, cfg.MAX_FULL_PTS);
