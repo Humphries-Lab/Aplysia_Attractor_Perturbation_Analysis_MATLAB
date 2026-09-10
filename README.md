@@ -25,7 +25,7 @@ script that only calls those functions in sequence.
    Uses `cfg.t_P9_evoked`/`cfg.t_end_evoked` instead of `fn_getEpochTiming`,
    and altered `_evoked`-suffixed plotting wrappers (bottom of the script) calling
    upon the original `Functions/` to bypass `Recovery`/`C2`.
-   Saves `<recording_ID>_results.mat` in the same format `Run_Cohort_Analysis.m`
+   Saves `<recording_ID>_results_sensitization.mat` in the same format `Run_Cohort_Analysis.m`
    expects, but without any `_Recovery`/`_rr` columns. 
 4. **`Run_Cohort_Analysis.m`** - run this AFTER `Run_Attractor_Analysis.m` or `Run_Evoked_Analysis.m`
    has been run for every animal/recording. Pools all
