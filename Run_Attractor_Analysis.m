@@ -22,6 +22,9 @@ run(cfgFile);   % defines `cfg`
 
 if ~exist(cfg.RESULTS_DIR,'dir'), mkdir(cfg.RESULTS_DIR); end
 if ~exist(cfg.FIGURES_DIR,'dir'), mkdir(cfg.FIGURES_DIR); end
+% Append the recording_ID to the base figures directory and create the subfolder
+cfg.FIGURES_DIR = fullfile(cfg.FIGURES_DIR, cfg.recording_ID);
+if ~exist(cfg.FIGURES_DIR,'dir'), mkdir(cfg.FIGURES_DIR); end
 
 %% =========================================================================
 %  Epoch timing 
