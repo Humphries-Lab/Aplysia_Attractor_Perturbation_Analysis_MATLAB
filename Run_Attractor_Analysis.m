@@ -20,12 +20,9 @@ if ~isfile(cfgFile)
 end
 run(cfgFile);   % defines `cfg`
 
-if ~exist(cfg.RESULTS_DIR,'dir'), mkdir(cfg.RESULTS_DIR); end
-if ~exist(cfg.FIGURES_DIR,'dir'), mkdir(cfg.FIGURES_DIR); end
-% Append the recording_ID to the base figures directory and create the subfolder
+if ~exist(cfg.RESULTS_DIR, 'dir'), mkdir(cfg.RESULTS_DIR); end
 cfg.FIGURES_DIR = fullfile(cfg.FIGURES_DIR, cfg.recording_ID);
-if ~exist(cfg.FIGURES_DIR,'dir'), mkdir(cfg.FIGURES_DIR); end
-
+if ~exist(cfg.FIGURES_DIR, 'dir'), mkdir(cfg.FIGURES_DIR); end
 if ~exist(cfg.LOGS_DIR,'dir'), mkdir(cfg.LOGS_DIR); end
 diary off;   % close any diary left open by a previous run that errored mid-way
 logFile = fullfile(cfg.LOGS_DIR, sprintf('%s_log.txt', cfg.recording_ID));
