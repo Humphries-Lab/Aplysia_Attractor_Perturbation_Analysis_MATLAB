@@ -19,15 +19,15 @@ script that only calls those functions in sequence.
    -> PCA -> windowed PCA & participation ratio -> subspace alignment ->
    recurrence-density analysis -> RR-based attractor epoch detection),
    saving all figures to `cfg.FIGURES_DIR` and a results `.mat` file to
-   `cfg.RESULTS_DIR`. 
-2b. **`Run_Evoked_Analysis.m`** - companion pipeline for a single-stimulus,
-    no-perturbation recording (Baseline + Evoked only, no Recovery epoch).
-    Uses `cfg.t_P9_evoked`/`cfg.t_end_evoked` instead of `fn_getEpochTiming`,
-    and its own `_evoked`-suffixed plotting wrappers (bottom of the script)
-    in place of the shared `Recovery`/`C2`-dependent plotting functions.
-    Saves `<recording_ID>_results.mat` in the same format `Run_Cohort_Analysis.m`
-    expects, but without any `_Recovery`/`_rr` columns.
-3. **`Run_Cohort_Analysis.m`** - run this AFTER `Run_Attractor_Analysis.m` 
+   `cfg.RESULTS_DIR`.
+3. **`Run_Evoked_Analysis.m`** - companion pipeline for a single-stimulus,
+   no-perturbation recording (Baseline + Evoked only, no Recovery epoch).
+   Uses `cfg.t_P9_evoked`/`cfg.t_end_evoked` instead of `fn_getEpochTiming`,
+   and its own `_evoked`-suffixed plotting wrappers (bottom of the script)
+   in place of the shared `Recovery`/`C2`-dependent plotting functions.
+   Saves `<recording_ID>_results.mat` in the same format `Run_Cohort_Analysis.m`
+   expects, but without any `_Recovery`/`_rr` columns.
+5. **`Run_Cohort_Analysis.m`** - run this AFTER `Run_Attractor_Analysis.m` or `Run_Evoked_Analysis.m`
    has been run for every animal/recording. Pools all
    `<recording_ID>_results.mat` files into one table for cohort-level
    statistics - see "Cohort-level analysis" below.
