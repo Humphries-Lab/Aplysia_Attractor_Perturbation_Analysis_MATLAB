@@ -126,9 +126,9 @@ fn_plotAlignmentTimeseries(al_t, al_v, chance_lvl, t_P9, t_evoked_start, t_C2, t
     cfg.motor_buffer_s, cfg.recovery_delay_s, nDims, cfg.slide_win_s, cfg.recording_ID, cfg.FIGURES_DIR);
 
 %% =========================================================================
-%  SECTION 5 - RECURRENCE ANALYSIS (fixed-window epochs)
+%  SECTION 5a - RECURRENCE DENSITY ANALYSIS 
 %  =========================================================================
-fprintf('\nSection 5: Recurrence density analysis...\n');
+fprintf('\nSection 5a: Recurrence density analysis...\n');
 
 mu_global = mean(spike_conv, 2);
 
@@ -182,13 +182,13 @@ fn_plotRecurrenceSummary(traj_ev, t_ev_ax, traj_re, t_re_ax, R_ev, R_re, ...
     epsilon_rr, cfg.recording_ID, cfg.FIGURES_DIR);
 
 %% =========================================================================
-%  SECTION 5c - EPOCH DETECTION VIA RECURRENCE DENSITY
+%  SECTION 5b - EPOCH DETECTION VIA RECURRENCE DENSITY
 %  Detect the first time the population "locks onto" an attractor,
 %  searching P9->C2 for onset and C2->end for return, each using a
 %  within-search-window calibrated epsilon (fixed evoked eps kept only as
 %  a plotted comparison).
 %  =========================================================================
-fprintf('\nSection 5c: Attractor epoch detection based on recurrence density...\n');
+fprintf('\nSection 5b: Attractor epoch detection based on recurrence density...\n');
 
 onset = fn_detectAttractorEpoch(spike_conv, cfg.fs, V, mu_global, t_P9, t_C2, ...
     epsilon_rr, cfg.MIN_LAG_S, cfg.slide_win_s, win_f, step_f, cfg.ONSET_RATIO, cfg.MAX_FULL_PTS, t_evoked_start);
@@ -232,9 +232,9 @@ return_win_t = return_.win_t; return_win_v = return_.win_v; return_win_v_fixed =
 eps_onset = onset.epsilon_within; eps_return = return_.epsilon_within; %#ok<NASGU>
 
 %% =========================================================================
-%  SECTION 5d - PR & SUBSPACE ALIGNMENT ON ATTRACTOR-DEFINED EPOCHS
+%  SECTION 5c - PR & SUBSPACE ALIGNMENT ON ATTRACTOR-DEFINED EPOCHS
 %  =========================================================================
-fprintf('\nSection 5d: PR and alignment on attractor-defined epochs...\n');
+fprintf('\nSection 5c: PR and alignment on attractor-defined epochs...\n');
 
 wins_s_rr     = [0, t_P9; t_attractor_onset, t_C2; t_attractor_return, t_end];
 win_labels_rr = {'Baseline','Attractor-evoked','Attractor-recovery'};
