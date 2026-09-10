@@ -33,6 +33,6 @@ xtickangle(0);
 ylabel('Recurrence density'); title('Attractor comparison via recurrence density','FontWeight','normal'); ylim([0 1.05]);
 
 sgtitle(sprintf('%s | Attractor epoch analysis', recording_ID),'FontWeight','normal');
-exportgraphics(fig, fullfile(figuresDir, '05d_attractor_comparison.png'), 'Resolution', 550);
+exportgraphics(fig, fullfile(figuresDir, '05c_attractor_comparison.png'), 'Resolution', 550);
 
 end
