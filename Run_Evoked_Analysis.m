@@ -31,9 +31,13 @@ run(cfgFile);   % defines `cfg`
 if ~exist(cfg.RESULTS_DIR,'dir'), mkdir(cfg.RESULTS_DIR); end
 if ~exist(cfg.FIGURES_DIR,'dir'), mkdir(cfg.FIGURES_DIR); end
 
-%% Epoch timing (edit per recording)
-t_P9  = 120;   % stimulus onset (s)
-t_end = 420;   % end of recording (change accordingly)
+%% Epoch timing
+% t_P9/t_end are protocol landmarks and they are present in
+% Config_UserSettings.m (cfg.t_P9_evoked / cfg.t_end_evoked) alongside
+% every other per-recording setting, same as fn_getEpochTiming does for
+% the 12min/20min protocols in Run_Attractor_Analysis.m. 
+t_P9  = cfg.t_P9_evoked;
+t_end = cfg.t_end_evoked;
 
 t_evoked_start = t_P9 + cfg.motor_buffer_s;
 wins_s     = [0, t_P9; t_evoked_start, t_end];
@@ -125,13 +129,13 @@ fn_plotPRTimeseries_evoked(pr_t, pr_v, t_P9, t_evoked_start, t_end, ...
     cfg.motor_buffer_s, cfg.slide_win_s, cfg.slide_step_s, cfg.recording_ID, cfg.FIGURES_DIR);
 
 %% =========================================================================
-%  SECTION 4 - SUBSPACE ALIGNMENT (Baseline -> Evoked; the only pair here)
+%  SECTION 4 - SUBSPACE ALIGNMENT (Baseline -> Evoked)
 %  =========================================================================
 fprintf('\nSection 4: Subspace alignment...\n');
 
 [nDims, chance_lvl] = fn_chooseAlignmentK(cfg.K_ALIGN, WPCA(2), nN, cfg.align_var_thresh_pct);
 
-align_mat = fn_epochAlignmentMatrix(WPCA, nDims);   % 2x2 
+align_mat = fn_epochAlignmentMatrix(WPCA, nDims);   % 2x2
 align_BE  = align_mat(1,2);
 align_BE_corrected = (align_BE - chance_lvl) / (1 - chance_lvl);
 fprintf('  Baseline->Evoked = %.3f  (chance=%.3f, ratio=%.1fx)\n', align_BE, chance_lvl, align_BE/chance_lvl);
@@ -156,10 +160,11 @@ fprintf('\nSection 5: Recurrence density analysis...\n');
 
 mu_global = mean(spike_conv, 2);
 
+% MAX_FULL_PTS and EPS_PCTILE come from cfg, same fields Run_Attractor_Analysis.m
 [traj_ep_global, ~] = fn_getEpochTrajectory(spike_conv, round(t_evoked_start*cfg.fs), round(t_end*cfg.fs), ...
-    cfg.fs, V, mu_global, 1500);
-epsilon_rr = prctile(pdist(traj_ep_global,'euclidean'), 10);
-fprintf('  eps = %.4f  (10th pct of evoked pairwise distances)\n', epsilon_rr);
+    cfg.fs, V, mu_global, cfg.MAX_FULL_PTS);
+epsilon_rr = prctile(pdist(traj_ep_global,'euclidean'), cfg.EPS_PCTILE);
+fprintf('  eps = %.4f  (%gth pct of evoked pairwise distances)\n', epsilon_rr, cfg.EPS_PCTILE);
 
 [traj_full, t_full] = fn_getEpochTrajectory(spike_conv, 1, nFrames, cfg.fs, V, mu_global, cfg.MAX_FULL_PTS);
 [~, ~, recurs_full, tested_full] = fn_recurrenceDensity(traj_full, t_full, epsilon_rr, cfg.MIN_LAG_S, cfg.slide_win_s);
@@ -190,12 +195,12 @@ fprintf('  Cross-recurrence density (Baseline found in Evoked): %.3f\n', cross_r
 % traj_ev/t_ev_ax standing in for Recovery (dummy data);
 % fn_plotRecurrenceSummary_evoked then deletes the resulting Recovery /
 % cross-recurrence panels and replaces them with a "No Recovery epoch"
-% label. 
+% label.
 fn_plotRecurrenceSummary_evoked(traj_ev, t_ev_ax, R_ev, ev_recur_density, ...
     epsilon_rr, cfg.recording_ID, cfg.FIGURES_DIR);
 
 %% =========================================================================
-%  SECTION 5c - ATTRACTOR ONSET DETECTION (P9 -> end; no return search)
+%  SECTION 5c - ATTRACTOR ONSET DETECTION (P9 -> end)
 %  =========================================================================
 fprintf('\nSection 5c: Attractor onset detection...\n');
 
@@ -218,7 +223,7 @@ end
 
 % fn_plotEpochDetection requires a return_ struct; return_placeholder has
 % detected=false (skips Recovery shading) and empty win_t/win_v/
-% win_v_fixed so its unconditional plot() calls are no-ops.
+% win_v_fixed so its unconditional plot() calls are harmless no-ops.
 return_placeholder.detected    = false;
 return_placeholder.t_lock      = NaN;
 return_placeholder.win_t       = [];
@@ -230,9 +235,9 @@ onset_win_t = onset.win_t; onset_win_v = onset.win_v; onset_win_v_fixed = onset.
 eps_onset = onset.epsilon_within; %#ok<NASGU>
 
 %% =========================================================================
-%  SECTION 5d - PR & ALIGNMENT ON THE ATTRACTOR-DEFINED EVOKED WINDOW
+%  SECTION 5d - PR & ALIGNMENT ON THE RR-DEFINED EVOKED WINDOW
 %  =========================================================================
-fprintf('\nSection 5d: PR and alignment on the attractor-defined evoked window...\n');
+fprintf('\nSection 5d: PR and alignment on the RR-defined evoked window...\n');
 
 wins_s_rr     = [0, t_P9; t_attractor_onset, t_end];
 win_labels_rr = {'Baseline','Attractor-evoked'};
@@ -250,9 +255,8 @@ fprintf('  Alignment B->E [RR-defined]: %.3f  |  [fixed]: %.3f  |  Chance: %.3f\
 
 % fn_plotAttractorComparison hard-codes 3 epochs in panel 1's XTick, so
 % fn_plotAttractorComparison_evoked pads Evoked as a placeholder 3rd bar
-% there and removes it afterward. Panel 3 needs no padding -- it already
-% has 3 real values (Evoked, Baseline, cross-recurrence) -- only its tick
-% labels are corrected.
+% there and removes it afterward. Panel 3 needs no padding as it already
+% has 3 real values (Evoked, Baseline, cross-recurrence).
 fn_plotAttractorComparison_evoked(PR_norm, PR_norm_rr, win_labels, ...
     align_mat(1,2), align_mat_rr(1,2), chance_lvl, ...
     ev_recur_density, base_recur_density, cross_recur_density, cfg.recording_ID, cfg.FIGURES_DIR);
@@ -425,7 +429,8 @@ function fn_plotAttractorComparison_evoked(PR_norm, PR_norm_rr, win_labels, ...
     align_ER_fixed, align_ER_rr, chance_lvl, ev_recur_density, base_recur_density, cross_recur_density, recording_ID, figuresDir)
 % Panel 1's XTick=1:3 layout is hard-coded, so a placeholder 3rd "epoch"
 % (Evoked's PR duplicated, label '(n/a)') is padded in and removed after.
-% Panel 3 needs no padding, only its tick labels are corrected. 
+% Panel 3 needs no padding -- its 3 bars are all real -- only its tick
+% labels are corrected. Panel 2 is untouched.
 PR_norm_padded    = [PR_norm, PR_norm(end)];
 PR_norm_rr_padded = [PR_norm_rr, PR_norm_rr(end)];
 win_labels_padded = [win_labels, {'(n/a)'}];
