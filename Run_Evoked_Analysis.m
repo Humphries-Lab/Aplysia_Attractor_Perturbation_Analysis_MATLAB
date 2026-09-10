@@ -34,6 +34,13 @@ if ~exist(cfg.FIGURES_DIR,'dir'), mkdir(cfg.FIGURES_DIR); end
 cfg.FIGURES_DIR = fullfile(cfg.FIGURES_DIR, cfg.recording_ID);
 if ~exist(cfg.FIGURES_DIR,'dir'), mkdir(cfg.FIGURES_DIR); end
 
+if ~exist(cfg.LOGS_DIR,'dir'), mkdir(cfg.LOGS_DIR); end
+diary off;   % close any diary left open by a previous run that errored mid-way
+logFile = fullfile(cfg.LOGS_DIR, sprintf('%s_log_%s.txt', cfg.recording_ID, datestr(now,'yyyymmdd_HHMMSS')));
+diary(logFile);
+diary on;
+fprintf('Logging command window output to: %s\n', logFile);
+
 %% Epoch timing
 % t_P9/t_end are protocol landmarks and they are present in
 % Config_UserSettings.m (cfg.t_P9_evoked / cfg.t_end_evoked) alongside
@@ -291,6 +298,7 @@ save(save_path, ...
     '-v7.3');
 
 fprintf('\nSaved: %s\nDone.\n', save_path);
+diary off;
 
 %% =========================================================================
 %  LOCAL FUNCTIONS
