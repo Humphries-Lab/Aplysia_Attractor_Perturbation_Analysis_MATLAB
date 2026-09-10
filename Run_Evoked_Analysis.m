@@ -35,14 +35,14 @@ if ~exist(cfg.FIGURES_DIR,'dir'), mkdir(cfg.FIGURES_DIR); end
 % t_P9/t_end are protocol landmarks and they are present in
 % Config_UserSettings.m (cfg.t_P9_evoked / cfg.t_end_evoked) alongside
 % every other per-recording setting, same as fn_getEpochTiming does for
-% the 12min/20min protocols in Run_Attractor_Analysis.m. 
+% the 12min/20min protocols in Run_Attractor_Analysis.m.
 t_P9  = cfg.t_P9_evoked;
 t_end = cfg.t_end_evoked;
 
 t_evoked_start = t_P9 + cfg.motor_buffer_s;
 wins_s     = [0, t_P9; t_evoked_start, t_end];
 win_labels = {'Baseline', 'Evoked'};
-protocol_label = 'evoked (no perturbation)';
+protocol_label = 'evoked';
 
 fprintf('Epoch definitions:\n');
 fprintf('  Baseline : 0 - %.0f s\n', t_P9);
@@ -154,9 +154,9 @@ fn_plotAlignmentTimeseries_evoked(al_t, al_v, chance_lvl, t_P9, t_evoked_start, 
     cfg.motor_buffer_s, nDims, cfg.slide_win_s, cfg.recording_ID, cfg.FIGURES_DIR);
 
 %% =========================================================================
-%  SECTION 5 - RECURRENCE ANALYSIS (Evoked only)
+%  SECTION 5a - RECURRENCE DENSITY ANALYSIS (Evoked only)
 %  =========================================================================
-fprintf('\nSection 5: Recurrence density analysis...\n');
+fprintf('\nSection 5a: Recurrence density analysis...\n');
 
 mu_global = mean(spike_conv, 2);
 
@@ -192,7 +192,7 @@ fprintf('  Baseline recurrence density (evoked eps): %.3f\n', base_recur_density
 fprintf('  Cross-recurrence density (Baseline found in Evoked): %.3f\n', cross_recur_density);
 
 % No Recovery epoch exists, so fn_plotRecurrenceSummary is called with
-% traj_ev/t_ev_ax standing in for Recovery (dummy data);
+% traj_ev/t_ev_ax standing in for Recovery (well-formed dummy data);
 % fn_plotRecurrenceSummary_evoked then deletes the resulting Recovery /
 % cross-recurrence panels and replaces them with a "No Recovery epoch"
 % label.
@@ -200,9 +200,9 @@ fn_plotRecurrenceSummary_evoked(traj_ev, t_ev_ax, R_ev, ev_recur_density, ...
     epsilon_rr, cfg.recording_ID, cfg.FIGURES_DIR);
 
 %% =========================================================================
-%  SECTION 5c - ATTRACTOR ONSET DETECTION (P9 -> end)
+%  SECTION 5b - ATTRACTOR ONSET DETECTION (P9 -> end)
 %  =========================================================================
-fprintf('\nSection 5c: Attractor onset detection...\n');
+fprintf('\nSection 5b: Attractor onset detection...\n');
 
 onset = fn_detectAttractorEpoch(spike_conv, cfg.fs, V, mu_global, t_P9, t_end, ...
     epsilon_rr, cfg.MIN_LAG_S, cfg.slide_win_s, win_f, step_f, cfg.ONSET_RATIO, cfg.MAX_FULL_PTS, t_evoked_start);
@@ -223,7 +223,7 @@ end
 
 % fn_plotEpochDetection requires a return_ struct; return_placeholder has
 % detected=false (skips Recovery shading) and empty win_t/win_v/
-% win_v_fixed so its unconditional plot() calls are harmless no-ops.
+% win_v_fixed so its unconditional plot() calls are no-ops.
 return_placeholder.detected    = false;
 return_placeholder.t_lock      = NaN;
 return_placeholder.win_t       = [];
@@ -235,9 +235,9 @@ onset_win_t = onset.win_t; onset_win_v = onset.win_v; onset_win_v_fixed = onset.
 eps_onset = onset.epsilon_within; %#ok<NASGU>
 
 %% =========================================================================
-%  SECTION 5d - PR & ALIGNMENT ON THE RR-DEFINED EVOKED WINDOW
+%  SECTION 5c - PR & ALIGNMENT ON THE RR-DEFINED EVOKED WINDOW
 %  =========================================================================
-fprintf('\nSection 5d: PR and alignment on the RR-defined evoked window...\n');
+fprintf('\nSection 5c: PR and alignment on the RR-defined evoked window...\n');
 
 wins_s_rr     = [0, t_P9; t_attractor_onset, t_end];
 win_labels_rr = {'Baseline','Attractor-evoked'};
@@ -255,8 +255,9 @@ fprintf('  Alignment B->E [RR-defined]: %.3f  |  [fixed]: %.3f  |  Chance: %.3f\
 
 % fn_plotAttractorComparison hard-codes 3 epochs in panel 1's XTick, so
 % fn_plotAttractorComparison_evoked pads Evoked as a placeholder 3rd bar
-% there and removes it afterward. Panel 3 needs no padding as it already
-% has 3 real values (Evoked, Baseline, cross-recurrence).
+% there and removes it afterward. Panel 3 needs no padding -- it already
+% has 3 real values (Evoked, Baseline, cross-recurrence) -- only its tick
+% labels are corrected.
 fn_plotAttractorComparison_evoked(PR_norm, PR_norm_rr, win_labels, ...
     align_mat(1,2), align_mat_rr(1,2), chance_lvl, ...
     ev_recur_density, base_recur_density, cross_recur_density, cfg.recording_ID, cfg.FIGURES_DIR);
@@ -316,7 +317,6 @@ legend({win_labels{1}, win_labels{2}, 'P9 onset'}, 'Location', 'best');
 grid on; view([-35 25]);
 title(sprintf('Population trajectory | %s', recording_ID));
 exportgraphics(fig, fullfile(figuresDir, '02_trajectory_3D.png'), 'Resolution', 500);
-close(fig);
 end
 
 function fn_deleteXlinesAtValue(fig, targetValue)
@@ -336,7 +336,6 @@ fn_plotRaster(peaks, fs, nN, nFrames, t_P9, t_end, recording_ID, protocol_label,
 fig = gcf;
 fn_deleteXlinesAtValue(fig, t_end);
 exportgraphics(fig, fullfile(figuresDir, '01b_raster.png'), 'Resolution', 500);
-close(fig);
 end
 
 function fn_plotSmoothedActivity_evoked(spike_conv, fs, nN, nFrames, sigma_s, t_P9, t_end, recording_ID, figuresDir)
@@ -344,7 +343,6 @@ fn_plotSmoothedActivity(spike_conv, fs, nN, nFrames, sigma_s, t_P9, t_end, recor
 fig = gcf;
 fn_deleteXlinesAtValue(fig, t_end);
 exportgraphics(fig, fullfile(figuresDir, '01c_smoothed.png'), 'Resolution', 500);
-close(fig);
 end
 
 function fn_plotPRTimeseries_evoked(pr_t, pr_v, t_P9, t_evoked_start, t_end, motor_buffer_s, slide_win_s, slide_step_s, recording_ID, figuresDir)
@@ -356,7 +354,6 @@ fig = gcf;
 fn_deleteXlinesAtValue(fig, t_end);
 xlim(findobj(fig, 'Type', 'axes'), 'auto');
 exportgraphics(fig, fullfile(figuresDir, '03_PR_timeseries.png'), 'Resolution', 500);
-close(fig);
 end
 
 function fn_plotAlignmentTimeseries_evoked(al_t, al_v, chance_lvl, t_P9, t_evoked_start, t_end, motor_buffer_s, nDims, slide_win_s, recording_ID, figuresDir)
@@ -366,7 +363,6 @@ fig = gcf;
 fn_deleteXlinesAtValue(fig, t_end);
 xlim(findobj(fig, 'Type', 'axes'), 'auto');
 exportgraphics(fig, fullfile(figuresDir, '04c_alignment_timeseries.png'), 'Resolution', 500);
-close(fig);
 end
 
 function fn_plotEpochDetection_evoked(onset, return_placeholder, t_P9, t_end, onsetRatio, recording_ID, figuresDir)
@@ -394,8 +390,7 @@ for k = 1:numel(allLines)
 end
 legend(ax, 'Location', 'northeastoutside');
 
-exportgraphics(fig, fullfile(figuresDir, '05c_epoch_detection.png'), 'Resolution', 550);
-close(fig);
+exportgraphics(fig, fullfile(figuresDir, '05b_epoch_detection.png'), 'Resolution', 550);
 end
 
 function fn_plotRecurrenceSummary_evoked(traj_ev, t_ev_ax, R_ev, ev_recur_density, epsilon_rr, recording_ID, figuresDir)
@@ -421,8 +416,7 @@ for k = 2:4
         'FontSize', 11, 'Color', [0.4 0.4 0.4]);
 end
 
-exportgraphics(fig, fullfile(figuresDir, '05_recurrence_all.png'), 'Resolution', 500);
-close(fig);
+exportgraphics(fig, fullfile(figuresDir, '05a_recurrence_all.png'), 'Resolution', 500);
 end
 
 function fn_plotAttractorComparison_evoked(PR_norm, PR_norm_rr, win_labels, ...
@@ -454,6 +448,5 @@ set(ax_all(1), 'XTick', 1:2, 'XTickLabel', win_labels, 'XLim', [0.4 2.6]);
 set(ax_all(3), 'XTickLabel', {'Evoked', 'Baseline', sprintf('Cross\n(Base->Ev)')});
 title(ax_all(3), 'Baseline vs Evoked recurrence density', 'FontWeight', 'normal');
 
-exportgraphics(fig, fullfile(figuresDir, '05d_attractor_comparison.png'), 'Resolution', 550);
-close(fig);
+exportgraphics(fig, fullfile(figuresDir, '05c_attractor_comparison.png'), 'Resolution', 550);
 end
