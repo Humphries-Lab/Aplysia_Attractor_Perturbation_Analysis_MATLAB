@@ -27,7 +27,7 @@ cfg.FIGURES_DIR = fullfile(toolboxRoot, 'Figures');
 
 % ---- Recording metadata --------------------------------------------------
 cfg.recording_ID = 'Sep12';   % EDIT AS REQUIRED 
-cfg.protocol     = '12min';   % EDIT AS REQUIRED --> '12min' or '20min' etc. [or '25min' (for concatenated files]
+cfg.protocol     = '12min';   % EDIT AS REQUIRED --> '12min' or '20min' etc. [or '25min' (for concatenated files])
 cfg.fs           = 1629;      % sampling rate (fps)
 
 % ---- Data loading ---------------------------------------------------------
@@ -69,9 +69,6 @@ cfg.EPS_PCTILE   = 10;        % percentile of pairwise distances used to calibra
 %   N_SIGMA = 3   -> conservative (only count very strong attractors)
 cfg.N_SIGMA  = 2;
 cfg.N_CONSEC = 1;
-
-% ---- FFT / dominant oscillation period ------------------------------------
-cfg.fft_cutoff_period_s = 250;  % s, high-pass cutoff (suppress drift slower than this)
 
 % ---- Synthetic validation (only used by the Validation/ scripts) --------
 cfg.validation_seed_alignment = 1;
