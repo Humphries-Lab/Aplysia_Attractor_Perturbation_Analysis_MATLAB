@@ -1,7 +1,7 @@
 # Aplysia Attractor Perturbation Analysis Toolbox
 
 MATLAB toolbox for analysing population-level attractor dynamics after a
-motor perturbation in *Aplysia* recordings.
+motor perturbation in *Aplysia* recordings. Couple of sister pipelines have been added which traces the motor activity without the perturbation and motor activity across P9 repeated stimuli for sensitization.
 
 A single user-edited settings script, a folder of small reusable
 functions (one function per file, each documenting the inputs/outputs and
@@ -25,12 +25,29 @@ script that only calls those functions in sequence.
    Uses `cfg.t_P9_evoked`/`cfg.t_end_evoked` instead of `fn_getEpochTiming`,
    and altered `_evoked`-suffixed plotting wrappers (bottom of the script) calling
    upon the original `Functions/` to bypass `Recovery`/`C2`.
-   Saves `<recording_ID>_results_sensitization.mat` in the same format `Run_Cohort_Analysis.m`
+   Saves `<recording_ID>_results.mat` in the same format `Run_Cohort_Analysis.m`
    expects, but without any `_Recovery`/`_rr` columns. 
-4. **`Run_Cohort_Analysis.m`** - run this AFTER `Run_Attractor_Analysis.m` or `Run_Evoked_Analysis.m`
+4. **`Run_Sensitization_Analysis.m`** - companion pipeline for a repeated-stimulus
+   (sensitization) recording: five 5-minute files concatenated into one
+   25-minute recording, each with one P9 at 90 s (file-relative), giving
+   **1 Baseline + 5 Evoked epochs**. Protocol constants (`nStim`, `FILELEN_S`,
+   `T_P9_INFILE_S`) are set at the top of the script; everything else comes
+   from `Config_UserSettings.m`, and the same `Functions/` library is used
+   unmodified. Runs the same stages as `Run_Evoked_Analysis.m`, but
+   per stimulus, plus across-stimulus readouts: PR vs stimulus, subspace
+   alignment (to Evoked_1, to Baseline, and step-to-step Evoked_i -> Evoked_i+1,
+   each with the chance level), recurrence / cross-recurrence to Evoked_1,
+   and attractor onset latency per stimulus. All plotting functions are local
+   to the script (bottom of file); figures are saved as 500 DPI PNGs to
+   `cfg.FIGURES_DIR/<recording_ID>/` and results to
+   `<recording_ID>_results_sensitization.mat`. Incomplete trailing stimuli
+   (recording shorter than 5 x 300 s) are dropped with a warning.
+5. **`Run_Cohort_Analysis.m`** - run this AFTER `Run_Attractor_Analysis.m` or `Run_Evoked_Analysis.m`
    has been run for every animal/recording. Pools all
    `<recording_ID>_results.mat` files into one table for cohort-level
-   statistics - see "Cohort-level analysis" below.
+   statistics - see "Cohort-level analysis" below. Sensitization results
+   (`*_results_sensitization.mat`) have a different variable set and are
+   **not** pooled by this script.
 
 ## Folders
 
@@ -62,7 +79,8 @@ script that only calls those functions in sequence.
    `FIGURES_DIR`, `recording_ID`, `protocol` (`'12min'` or `'20min'`), and
    `fs` to match your recording. Adjust epoch timing, window sizes, and
    thresholds if needed (all fields are documented in that script).
-3. Run `Run_Attractor_Analysis.m`.
+3. Run `Run_Attractor_Analysis.m` (or `Run_Evoked_Analysis.m` for a single P9, or
+   `Run_Sensitization_Analysis.m` for repeated P9 stimuli).
 4. To add a new protocol duration, add a `case` to `fn_getEpochTiming.m`.
 5. To add a new figure, write a new function in `Functions/Plotting/` that
    takes the data it needs plus a save path, and call it from
@@ -164,6 +182,14 @@ recording is done. **This is not a statistics tool**.
   O(N^2) in the number of trajectory points; always downsample long
   trajectories first (see `fn_getEpochTrajectory`, and `cfg.MAX_WIN_PTS` /
   `cfg.MAX_FULL_PTS`).
+
+- In `Run_Sensitization_Analysis.m`, the PCA basis is fit from the start of
+  Evoked_1 to the end of the recording, and the recurrence epsilon and the
+  alignment dimensionality/chance level are calibrated on Evoked_1, so all
+  across-stimulus comparisons are relative to that first response (its
+  alignment/recurrence to itself is 1 by construction). Sliding-window
+  metrics span the joins between concatenated files, so changes at file
+  boundaries can be artifacts.
 
 ## Problems?
 
