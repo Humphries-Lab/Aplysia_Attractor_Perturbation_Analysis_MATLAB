@@ -261,6 +261,54 @@ fn_plotAttractorComparison(PR_norm, PR_norm_rr, win_labels, ...
     align_mat(2,3), align_mat_rr(2,3), chance_lvl, ...
     ev_recur_density, re_recur_density, cross_recur_density, cfg.recording_ID, cfg.FIGURES_DIR);
     
+%% =========================================================================
+%  SECTION 6 - DYNAMICAL EPOCHS (cycle-by-cycle jPCA subspace alignment)
+%  =========================================================================
+%  Unsupervised epoch definition: jPCA -> recurrence-defined cycles ->
+%  cycle x cycle subspace alignment -> clustering. Cycles are then labelled
+%  by protocol epoch to ask whether the same cluster appears either side of
+%  the perturbation (Evoked vs Recovery). Analysis window: cfg.DYN_WINDOW ('full' = 0 -> t_end).
+%
+%  Computing PR per cycle (dimensionality time-series),
+%  cycle-to-cycle and cycle-to-reference alignment (movement of the attractor),
+%  and the phase of the cycle at which P9 and C2 were applied.
+dyn = struct('ok', false); dyn_sweep = struct(); dyn_surr = struct(); cyc = struct('ok', false);
+if cfg.DYN_ENABLE
+    fprintf('\nSection 6: Dynamical epochs (jPCA cycles)...\n');
+    ep_bounds = [0, t_P9; t_evoked_start, t_C2; t_C2, t_recovery_start; t_recovery_start, t_end];
+    ep_labels = {'Baseline', 'Evoked', 'Perturbed', 'Recovery'};
+    try
+        switch cfg.DYN_WINDOW
+            case 'full',        dyn_range = [0, t_end];
+            case 'post_evoked', dyn_range = [t_evoked_start, t_end];
+            otherwise, error('cfg.DYN_WINDOW must be ''full'' or ''post_evoked''.');
+        end
+        dyn = fn_dynamicalEpochs(spike_conv, cfg.fs, dyn_range, cfg, ep_bounds, ep_labels);
+        fn_plotDynamicalEpochs(dyn, cfg.recording_ID, cfg.FIGURES_DIR);
+        fn_plotDynamicalThreshold(dyn, cfg.recording_ID, cfg.FIGURES_DIR);
+ 
+        % 6b - per-cycle PR, alignment (attractor movement) and stimulus phase
+        % (own try: a failure here must not skip the sweep / surrogate controls)
+        try
+            fprintf('\nSection 6b: Per-cycle PR, alignment and stimulus phase...\n');
+            cyc = fn_dynamicalCycleMetrics(spike_conv, cfg.fs, dyn, [t_P9 t_C2], {'P9','C2'}, t_evoked_start);
+            fn_plotDynamicalCycleMetrics(cyc, dyn, cfg.recording_ID, cfg.FIGURES_DIR);
+        catch ME2
+            warning('Run_Attractor_Analysis:CycleMetricsFailed', 'Section 6b skipped: %s', ME2.message);
+            cyc = struct('ok', false);
+        end
+ 
+        if ~isempty(cfg.DYN_REC_SWEEP)
+            dyn_sweep = fn_dynamicalSweep(spike_conv, cfg.fs, dyn_range, cfg, ep_bounds, ep_labels, dyn);
+        end
+        if cfg.DYN_NSURR > 0
+            dyn_surr = fn_dynamicalSurrogate(spike_conv, cfg.fs, dyn_range, cfg, ep_bounds, ep_labels, dyn);
+        end
+        fn_plotDynamicalControls(dyn, dyn_surr, cfg.recording_ID, cfg.FIGURES_DIR);
+    catch ME
+        warning('Run_Attractor_Analysis:DynamicalEpochsFailed', 'Section 6 skipped: %s', ME.message);
+    end
+end
 
 %% =========================================================================
 %  SAVE
@@ -271,7 +319,7 @@ nDims_align = nDims;
 recording_ID = cfg.recording_ID; protocol = cfg.protocol; fs = cfg.fs; %#ok<NASGU>
 N_SIGMA = cfg.N_SIGMA; N_CONSEC = cfg.N_CONSEC; ONSET_RATIO = cfg.ONSET_RATIO; %#ok<NASGU>
 t_C2_saved = t_C2; %#ok<NASGU>
-
+ 
 save(save_path, ...
     'recording_ID','protocol','fs', ...
     't_P9','t_C2','t_C2_saved','t_end','cfg', ...
@@ -287,13 +335,14 @@ save(save_path, ...
     'rr_full_t','rr_full_v', ...
     'onset_win_t','onset_win_v','onset_win_v_fixed', ...
     'return_win_t','return_win_v','return_win_v_fixed', ...
+    'dyn','cyc','dyn_sweep','dyn_surr', ...
     '-v7.3');
-
+ 
 fprintf('\nSaved: %s\nDone.\n', save_path);
 diary off;
 
 %% =========================================================================
-%  SECTION 6 - COHORT-LEVEL ANALYSIS (OUTSIDE the single-recording run)
+%  COHORT-LEVEL ANALYSIS (OUTSIDE the single-recording run)
 %  =========================================================================
 %  Run_Attractor_Analysis processes ONE recording at a time. Once every
 %  animal/recording has been run (each producing its own
