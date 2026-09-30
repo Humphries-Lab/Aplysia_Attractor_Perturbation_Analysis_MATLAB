@@ -93,3 +93,5 @@ cfg.DYN_SEED         = 1;      % rng seed (clustering is stochastic)
 cfg.DYN_NNULL        = 2000;   % shuffle samples for the chance level of cycle-to-cycle alignment
 cfg.DYN_NSURR        = 5;      % surrogate runs (each neuron circularly shifted independently); 0 = skip. Each run repeats the jPCA cycle search.
 cfg.DYN_NPERM        = 10000;  % permutations for the landmark-vs-change-point test
+
+
