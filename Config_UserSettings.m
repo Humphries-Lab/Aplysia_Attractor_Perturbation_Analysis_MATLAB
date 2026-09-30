@@ -79,12 +79,17 @@ cfg.validation_tol   = 0.05;
 
 % ---- Dynamical epochs (cycle-by-cycle jPCA alignment; Run_Attractor_Analysis Section 5d) ----
 %      Uses Andrea Colins Rodriguez's Dynamical_epochs + jPCA_Aplysia code
-%      (added as a git submodule in AndreaColinsR/Dynamical_epochs):
+%      (added as a git submodule in Dynamical_epochs/):
 %      git clone --recurse-submodules <this repo URL>
 cfg.DYN_ENABLE       = true;   % false = skip Section 5d
-cfg.DYN_CODE_DIR     = fullfile(toolboxRoot, 'AndreaColinsR', 'Dynamical_epochs');
-cfg.DYN_START_AFTER_P9_S = 10; % s after P9 at which the analysis window starts (window runs to t_end)
+cfg.DYN_CODE_DIR     = fullfile(toolboxRoot, 'Dynamical_epochs');
+cfg.DYN_WINDOW       = 'full'; % 'full' = whole recording: epochs are found WITHOUT protocol times (they only label the cycles afterwards)
+                               % 'post_evoked' = from t_evoked_start to the end (skips the P9 transient; baseline not analysed)
+cfg.DYN_REC_SWEEP    = [5 10 15]; % recurrence thresholds (%) re-run to test robustness; [] = skip the sweep
 cfg.DYN_BIN_MS       = 50;     % ms, bin size for jPCA / cycle detection
 cfg.DYN_MIN_SEG_S    = 10;     % s, minimum cycle duration
 cfg.DYN_REC_THRESH   = 10;     % %, recurrence threshold (~5 young, ~10 older animals)
 cfg.DYN_SEED         = 1;      % rng seed (clustering is stochastic)
+cfg.DYN_NNULL        = 2000;   % shuffle samples for the chance level of cycle-to-cycle alignment
+cfg.DYN_NSURR        = 5;      % surrogate runs (each neuron circularly shifted independently); 0 = skip. Each run repeats the jPCA cycle search.
+cfg.DYN_NPERM        = 10000;  % permutations for the landmark-vs-change-point test
