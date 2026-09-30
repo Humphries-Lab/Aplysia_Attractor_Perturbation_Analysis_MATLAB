@@ -76,3 +76,15 @@ cfg.validation_seed_alignment = 1;
 cfg.validation_seed_recurrence = 42;
 cfg.validation_nReps = 50;
 cfg.validation_tol   = 0.05;
+
+% ---- Dynamical epochs (cycle-by-cycle jPCA alignment; Run_Attractor_Analysis Section 5d) ----
+%      Uses Andrea Colins Rodriguez's Dynamical_epochs + jPCA_Aplysia code
+%      (added as a git submodule in AndreaColinsR/Dynamical_epochs):
+%      git clone --recurse-submodules <this repo URL>
+cfg.DYN_ENABLE       = true;   % false = skip Section 5d
+cfg.DYN_CODE_DIR     = fullfile(toolboxRoot, 'AndreaColinsR', 'Dynamical_epochs');
+cfg.DYN_START_AFTER_P9_S = 10; % s after P9 at which the analysis window starts (window runs to t_end)
+cfg.DYN_BIN_MS       = 50;     % ms, bin size for jPCA / cycle detection
+cfg.DYN_MIN_SEG_S    = 10;     % s, minimum cycle duration
+cfg.DYN_REC_THRESH   = 10;     % %, recurrence threshold (~5 young, ~10 older animals)
+cfg.DYN_SEED         = 1;      % rng seed (clustering is stochastic)
