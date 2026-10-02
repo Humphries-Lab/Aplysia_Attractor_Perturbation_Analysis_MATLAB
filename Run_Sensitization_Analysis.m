@@ -238,18 +238,30 @@ fn_plotAlignmentTimeseries_sensitization(al_t, al_v, chance_lvl, t_P9_all, fileB
 %  SECTION 5a - RECURRENCE ANALYSIS PER STIMULUS
 %  ========================================================================
 fprintf('\nSection 5a: Recurrence density analysis...\n');
-
 mu_global = mean(spike_conv, 2);
 
-% Same epsilon convention as Run_Evoked_Analysis.m (cfg.MAX_FULL_PTS / cfg.EPS_PCTILE),
-% calibrated on Evoked_1.
-[traj_ev1_global, ~] = fn_getEpochTrajectory(spike_conv, round(t_evoked_start_all(1)*cfg.fs), round(fileBounds(2)*cfg.fs), ...
-    cfg.fs, V, mu_global, cfg.MAX_FULL_PTS);
-epsilon_rr = prctile(pdist(traj_ev1_global,'euclidean'), cfg.EPS_PCTILE);
-fprintf('  eps = %.4f  (%gth pct of Evoked_1 pairwise distances)\n', epsilon_rr, cfg.EPS_PCTILE);
+% Fixed epsilon: cfg.EPS_PCTILE-th percentile of pairwise distances pooled
+% across all inter-stimulus intervals (P9_i -> P9_{i+1}). The last stimulus
+% has no following P9, so its interval runs from P9_5 to the end of the recording.
+isi_start_s = t_P9_all;
+isi_end_s   = [t_P9_all(2:end), t_end];
+
+pooled_d = [];
+for i = 1:nStim
+    f_a = max(round(isi_start_s(i) * cfg.fs), 1);
+    f_b = min(round(isi_end_s(i)   * cfg.fs), nFrames);
+    [traj_cal, ~] = fn_getEpochTrajectory(spike_conv, f_a, f_b, cfg.fs, V, mu_global, cfg.MAX_FULL_PTS);
+    pooled_d = [pooled_d, pdist(traj_cal, 'euclidean')]; %#ok<AGROW>
+    fprintf('  ISI %d: %.0f-%.0f s (%.0f s)\n', i, isi_start_s(i), isi_end_s(i), isi_end_s(i) - isi_start_s(i));
+end
+epsilon_rr = prctile(pooled_d, cfg.EPS_PCTILE);
+clear pooled_d traj_cal
+fprintf('  eps = %.4f  (%gth pct of pairwise distances pooled over %d inter-stimulus intervals)\n', ...
+    epsilon_rr, cfg.EPS_PCTILE, nStim);
 
 traj_evoked = cell(1, nStim);
 t_evoked_ax = cell(1, nStim);
+% ... (rest of Section 5a remains exactly the same)
 R_evoked    = cell(1, nStim);
 ev_recur_density = nan(1, nStim);
 
@@ -271,22 +283,38 @@ for i = 1:nStim
     fprintf('  Stim %d: Evoked RR=%.3f\n', i, ev_recur_density(i));
 end
 
-cross_recur_to_first = nan(1, nStim);
+% Full cross-recurrence matrix across all evoked epochs.
+% Diagonal = within-epoch recurrence density (same lag-excluded definition as
+% ev_recur_density); off-diagonal = cross-recurrence at the same epsilon_rr.
+cross_recur_mat = nan(nStim);
 for i = 1:nStim
-    if i == 1
-        cross_recur_to_first(i) = ev_recur_density(1);
-    else
-        [cross_recur_to_first(i), ~, ~] = fn_crossRecurrenceDensity(traj_evoked{1}, traj_evoked{i}, epsilon_rr);
+    cross_recur_mat(i,i) = ev_recur_density(i);
+    for j = 1:nStim
+        if i == j, continue; end
+        [cross_recur_mat(i,j), ~, ~] = fn_crossRecurrenceDensity(traj_evoked{i}, traj_evoked{j}, epsilon_rr);
     end
-    fprintf('  Stim %d: cross-recurrence to Evoked_1 = %.3f\n', i, cross_recur_to_first(i));
 end
 
-fn_plotRecurrenceVsStimulus(ev_recur_density, base_recur_density_1, cross_recur_to_first, cfg.recording_ID, cfg.FIGURES_DIR);
+asym = max(abs(cross_recur_mat - cross_recur_mat'), [], 'all');
+fprintf('  Cross-recurrence max |M - M''| = %.4f (0 = symmetric)\n', asym);
+
+cross_recur_to_first    = cross_recur_mat(1, :);
+cross_recur_consecutive = nan(1, max(nStim-1, 0));
+for i = 1:nStim-1
+    cross_recur_consecutive(i) = cross_recur_mat(i, i+1);
+end
+
+fprintf('  Cross-recurrence Evoked_1 -> Evoked_i:   '); fprintf('%.3f  ', cross_recur_to_first);    fprintf('\n');
+fprintf('  Cross-recurrence Evoked_i -> Evoked_i+1: '); fprintf('%.3f  ', cross_recur_consecutive); fprintf('\n');
+
+fn_plotRecurrenceVsStimulus(ev_recur_density, base_recur_density_1, cfg.recording_ID, cfg.FIGURES_DIR);
+fn_plotCrossRecurrenceMatrix(cross_recur_mat, cfg.recording_ID, cfg.FIGURES_DIR);
+fn_plotCrossRecurrenceConsecutive(cross_recur_consecutive, cfg.recording_ID, cfg.FIGURES_DIR);
 
 fn_plotRecurrenceSummary_sensitization(traj_evoked, t_evoked_ax, R_evoked, ev_recur_density, epsilon_rr, cfg.recording_ID, cfg.FIGURES_DIR);
 
 %% =========================================================================
-%  SECTION 5b - ATTRACTOR ONSET DETECTION
+%  SECTION 5b - ATTRACTOR ONSET DETECTION (fixed, pooled epsilon)
 %  ========================================================================
 fprintf('\nSection 5b: Attractor onset detection...\n');
 
@@ -298,6 +326,18 @@ onset_all             = cell(1, nStim);
 for i = 1:nStim
     onset_i = fn_detectAttractorEpoch(spike_conv, cfg.fs, V, mu_global, t_P9_all(i), fileBounds(i+1), ...
         epsilon_rr, cfg.MIN_LAG_S, cfg.slide_win_s, win_f, step_f, cfg.ONSET_RATIO, cfg.MAX_FULL_PTS, t_evoked_start_all(i));
+
+    % Bypass: the function detects on its within-window epsilon (win_v).
+    % Redo the threshold crossing on win_v_fixed, which uses epsilon_rr
+    % (the pooled epsilon, identical for every stimulus).
+    idx_fixed = find(onset_i.win_v_fixed >= cfg.ONSET_RATIO, 1, 'first');
+    onset_i.detected = ~isempty(idx_fixed);
+    if onset_i.detected
+        onset_i.t_lock = onset_i.win_t(idx_fixed);
+    else
+        onset_i.t_lock = t_evoked_start_all(i);   % same fallback as the function
+    end
+
     onset_all{i} = onset_i;
     t_attractor_onset_all(i) = onset_i.t_lock;
     onset_detected_all(i)    = onset_i.detected;
@@ -584,11 +624,11 @@ function fn_plotAlignmentTimeseries_sensitization(al_t, al_v, chance_lvl, t_P9_a
     close(fig);
 end
 
-function fn_plotRecurrenceVsStimulus(ev_rr, base_rr_1, cross_to_first, recording_ID, figuresDir)
+function fn_plotRecurrenceVsStimulus(ev_rr, base_rr_1, recording_ID, figuresDir)
     nStim = numel(ev_rr);
-    fig = figure('Name', 'Recurrence vs stimulus', 'Position', [200 100 1100 450], 'Visible', 'off');
+    % Reduced the figure width since it's now a single plot
+    fig = figure('Name', 'Recurrence vs stimulus', 'Position', [200 100 700 450], 'Visible', 'off');
 
-    subplot(1,2,1);
     plot(1:nStim, ev_rr, 's-', 'Color', fn_colBlue(), 'LineWidth', 1.4); hold on;
     yline(base_rr_1, '--', 'Baseline', 'Color', fn_colBase(), 'LineWidth', 1.2, 'LabelHorizontalAlignment', 'left');
     fn_labelEvoked(nStim, ev_rr(end), fn_colBlue());
@@ -596,16 +636,71 @@ function fn_plotRecurrenceVsStimulus(ev_rr, base_rr_1, cross_to_first, recording
     xlabel('Stimulus #'); ylabel('Self-recurrence density');
     xticks(1:nStim); grid on;
     legend off;   % legend removed: baseline is already labelled on the plot
-    title('Within-epoch stereotypy');
+    
+    title(sprintf('Within-epoch stereotypy across repeated P9 stimuli | %s', recording_ID), 'Interpreter', 'none');
 
-    subplot(1,2,2);
-    plot(1:nStim, cross_to_first, 'd-', 'Color', fn_colBlue(), 'LineWidth', 1.6);
-    xlabel('Stimulus #'); ylabel('Cross-recurrence to Evoked_1');
-    xticks(1:nStim); grid on;
-    title('Drift from the first evoked response');
-
-    sgtitle(sprintf('Recurrence density across repeated P9 stimuli | %s', recording_ID), 'Interpreter', 'none');
     exportgraphics(fig, fullfile(figuresDir, '05b_recurrence_vs_stimulus.png'), 'Resolution', 500);
+    close(fig);
+end
+
+function fn_plotCrossRecurrenceMatrix(M, recording_ID, figuresDir, clims)
+    % Cross-recurrence matrix: 'parula' colormap (blue-green-yellow), 
+    % fixed colour limits [0 1], and per-cell text colour chosen for contrast.
+    if nargin < 4 || isempty(clims), clims = [0 1]; end
+    nStim = size(M, 1);
+    labels = arrayfun(@(i) sprintf('Evoked_{%d}', i), 1:nStim, 'UniformOutput', false);
+
+    cmap = parula(256);
+
+    fig = figure('Name', 'Cross-recurrence matrix', 'Position', [200 100 700 600], 'Visible', 'off');
+    
+    % Plot the full matrix (including the diagonal)
+    imagesc(M);
+    set(gca, 'Color', 'w');
+    axis square;
+    colormap(cmap);
+    caxis(clims); % Enforces the 0 to 1 range
+    cb = colorbar; cb.Label.String = 'Cross-recurrence density';
+
+    xticks(1:nStim); xticklabels(labels); yticks(1:nStim); yticklabels(labels);
+    xtickangle(45); % Rotates x-axis labels like the reference image
+    
+    hold on;
+    for i = 1:nStim
+        for j = 1:nStim
+            % Colour of this cell on the colormap (after clipping to clims)
+            frac = (M(i,j) - clims(1)) / (clims(2) - clims(1));
+            frac = min(max(frac, 0), 1);
+            rgb  = cmap(max(1, round(frac*255) + 1), :);
+            
+            % Perceived brightness calculation to determine text color
+            lum  = 0.299*rgb(1) + 0.587*rgb(2) + 0.114*rgb(3);   
+            if lum > 0.5 
+                txtCol = 'k'; % Black text for light backgrounds (yellow/light green)
+            else 
+                txtCol = 'w'; % White text for dark backgrounds (blue/dark green)
+            end
+            
+            text(j, i, sprintf('%.2f', M(i,j)), 'HorizontalAlignment', 'center', ...
+                'Color', txtCol, 'FontWeight', 'bold');
+        end
+    end
+    title(sprintf('Cross-recurrence across evoked epochs | %s', recording_ID), 'Interpreter', 'none');
+    exportgraphics(fig, fullfile(figuresDir, '05f_cross_recurrence_matrix.png'), 'Resolution', 500);
+    close(fig);
+end
+
+function fn_plotCrossRecurrenceConsecutive(cross_recur_consecutive, recording_ID, figuresDir)
+    % One point per stimulus PAIR, labelled "1->2", "2->3", ... (mirrors fn_plotAlignmentConsecutive).
+    nPairs = numel(cross_recur_consecutive);
+    fig = figure('Name', 'Consecutive cross-recurrence', 'Position', [200 100 700 450], 'Visible', 'off');
+    plot(1:nPairs, cross_recur_consecutive, 'd-', 'Color', fn_colBlue(), 'LineWidth', 1.5);
+    pairLabels = arrayfun(@(k) sprintf('%d->%d', k, k+1), 1:nPairs, 'UniformOutput', false);
+    xticks(1:nPairs); xticklabels(pairLabels);
+    xlim([0.5, nPairs+0.5]); grid on;
+    xlabel('Stimulus pair (i -> i+1)'); ylabel('Cross-recurrence (Evoked_i \rightarrow Evoked_{i+1})');
+    title(sprintf('Step-to-step cross-recurrence | %s', recording_ID), 'Interpreter', 'none');
+    exportgraphics(fig, fullfile(figuresDir, '05g_cross_recurrence_consecutive.png'), 'Resolution', 500);
     close(fig);
 end
 
