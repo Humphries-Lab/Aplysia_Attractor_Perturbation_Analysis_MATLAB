@@ -36,8 +36,11 @@ script that only calls those functions in sequence.
    unmodified. Runs the same stages as `Run_Evoked_Analysis.m`, but
    per stimulus, plus across-stimulus readouts: PR vs stimulus, subspace
    alignment (to Evoked_1, to Baseline, and step-to-step Evoked_i -> Evoked_i+1,
-   each with the chance level), recurrence / cross-recurrence to Evoked_1,
-   and attractor onset latency per stimulus. All plotting functions are local
+   each with the chance level), self-recurrence per stimulus, the full
+   Evoked_i x Evoked_j cross-recurrence matrix (plus step-to-step i -> i+1
+   transitions, shown on a fixed colour scale `RR_CLIMS` shared across
+   recordings), and attractor onset latency per stimulus (threshold crossing on
+   the fixed-epsilon recurrence trace). All plotting functions are local
    to the script (bottom of file); figures are saved as 500 DPI PNGs to
    `cfg.FIGURES_DIR/<recording_ID>/` and results to
    `<recording_ID>_results_sensitization.mat`. Incomplete trailing stimuli
@@ -173,23 +176,22 @@ recording is done. **This is not a statistics tool**.
   needed (e.g. recurrence-density trajectories use the same 3-D basis
   throughout Section 5, calibrated from the Evoked epoch onward - see
   `Run_Attractor_Analysis.m`).
-- Self-recurrence density for an epoch is always calibrated with that
-  epoch's *own* epsilon (`fn_safeEpsilon`); cross-recurrence density
-  between two epochs intentionally uses one shared epsilon (from the
-  reference epoch) - see the comments in `Run_Attractor_Analysis.m`
-  Section 5 for why these differ.
+- In `Run_Attractor_Analysis.m`, self-recurrence density for an epoch is
+  always calibrated with that epoch's *own* epsilon (`fn_safeEpsilon`);
+  cross-recurrence density between two epochs intentionally uses one shared
+  epsilon (from the reference epoch) - see the comments in
+  `Run_Attractor_Analysis.m` Section 5 for why these differ.
 - `fn_recurrenceDensity` and `fn_crossRecurrenceDensity` are both
   O(N^2) in the number of trajectory points; always downsample long
   trajectories first (see `fn_getEpochTrajectory`, and `cfg.MAX_WIN_PTS` /
   `cfg.MAX_FULL_PTS`).
-
 - In `Run_Sensitization_Analysis.m`, the PCA basis is fit from the start of
-  Evoked_1 to the end of the recording, and the recurrence epsilon and the
-  alignment dimensionality/chance level are calibrated on Evoked_1, so all
-  across-stimulus comparisons are relative to that first response (its
-  alignment/recurrence to itself is 1 by construction). Sliding-window
-  metrics span the joins between concatenated files, so changes at file
-  boundaries can be artifacts.
+  Evoked_1 to the end of the recording, and the alignment dimensionality/chance
+  level are calibrated on Evoked_1, so alignment comparisons are relative to that
+  first response (its self-alignment is 1 by construction). The recurrence epsilon
+  is one fixed percentile of pairwise distances pooled across all P9-to-P9
+  intervals, identical for every stimulus. Sliding-window metrics and the epsilon
+  pooling intervals span file joins, so changes at file boundaries can be artifacts.
 
 ## Problems?
 
